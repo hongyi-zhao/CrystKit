@@ -1,7 +1,8 @@
 
 #############################################################################
 ##
-#F  CaratNormalizedInputFile( filename ) . . . . . returns a new normalized 'resfile' in Carat tmp directory
+#F  CaratNormalizedInputFile( filename ) . . . . . returns a new normalized
+#  'resfile' in Carat tmp directory
 ##
 InstallGlobalFunction( CaratNormalizedInputFile, function( filename )
 
@@ -23,8 +24,6 @@ InstallGlobalFunction( CaratNormalizedInputFile, function( filename )
 
 end );
 
-# 基于下面例子的进展：
-# Example 5
 # Do the following given matrices generate a space group? If so, find its name and normal representation. 
 # https://lbfm-rwth.github.io/carat/doc/examples/Ex5.html
 #############################################################################
@@ -190,7 +189,6 @@ InstallGlobalFunction( CaratQ_catalog, function( str, out )
 
     # find executable 
     cmd := "Q_catalog"; 
-    # CaratHelp(command);
     program := Filename( CARAT_BIN_DIR, cmd ); 
  
     cs := "-c";
@@ -202,8 +200,12 @@ InstallGlobalFunction( CaratQ_catalog, function( str, out )
     # CaratShowFile( out );
     CloseStream( _in );
     CloseStream( _out );
-
-    return out;
+    
+    if err = 0 then
+      return out;
+    else
+      return fail;
+    fi;
 
 end );
 
@@ -614,6 +616,144 @@ InstallGlobalFunction( OrbitOfStandardAffineCrystGroupOnLeftByNormalizerPointGro
   od;
 
 end );
+
+# 和 OrbitOfStandardAffineCrystGroupOnLeftByNormalizerPointGroup 的结果进行比较：
+InstallGlobalFunction(
+OrbitOfStandardAffineCrystGroupByCollectEquivExtensions, function( S, transpose )
+  local P, d, norm, Pgen, I, 
+        N, F, rels, mat, ext, oscee, orbs,
+        Sgen, t, M, pos, x;
+
+  # S:= SpaceGroup(4, 834);
+  # S:= SpaceGroupOnRightIT(3,74);
+  
+  # For matrices acting on the left 
+  # transpose:=true; 
+  if transpose then
+    S := TransposedMatrixGroup(S);
+  fi;
+
+  P := PointGroup(S);
+  d := DimensionOfMatrixGroup(S)-1;
+  I := IdentityMat(d);
+  norm := Filtered(GeneratorsOfGroup( Normalizer( GL(d, Integers), P ) ), x -> not x in P);
+ 
+
+  #  if not IsIntegerMatrixGroup( grp ) then
+  #     Error( "the point group must be an integer matrix group" );
+  #  fi;
+
+  #  if not IsFinite( grp ) then
+  #     Error("the point group must be finite" );
+  #  fi;
+
+  #  # catch the trivial case
+  #  if IsTrivial( grp ) then
+  #     # GeneratorsOfGroup(S);
+  #     S := MakeSpaceGroup( d, [], [], transpose );
+  #     if orbsflag then
+  #        return [[S]];
+  #     else
+  #        return [ S ];
+  #     fi;
+  #  fi;
+
+   if IsTrivial( P ) then
+      # d:=3;
+      # S := MakeSpaceGroup( d, [], [], false );
+      # S := MakeSpaceGroup( d, [], [], transpose );
+      # t := Concatenation(List( GeneratorsOfGroup(S), x -> x[1+d]{[1..d]} ));
+
+      # Sgen 是按照如下规则得到的： 
+      # PreImagesRepresentative( PointHomomorphism(S) , IdentityMat(d));
+      # 故此时为：
+      Sgen := [ IdentityMat(d + 1) ];
+      t := List(Concatenation(List(Sgen, x ->x{[1..d]}[d+1])), FractionModOne);
+      orbs := [t];
+      return orbs;
+   fi;
+
+  # first get group relators for grp
+  N := NiceObject( P );
+  F := Image( IsomorphismFpGroupByGenerators( N, GeneratorsOfGroup( N ) ) );
+  rels := List( RelatorsOfFpGroup( F ), ExtRepOfObj );
+
+  Pgen := GeneratorsOfGroup( P );
+
+  # construct equations which determine the non-primitive translations
+  # an alternative would be
+  #  mat := MatJacobianMatrix( F, Pgen );
+  mat := GroupExtEquations( d, Pgen, rels );
+
+
+  # now solve them modulo integers
+  ext := SolveHomEquationsModZ( mat ); 
+  # 很多情况，轨道尺寸过长，比如 SpaceGroup(4, 834) 的结果如下：
+  # 从而造成过滤出结果的相关工作非常耗时，使得这个方法没有实用价值了。
+  # [ 4096, 2 ]
+  # List(ext, Size); 
+
+  #F  . . . . collect extensions equivalent by conjugation with elems from norm
+  # collect group extensions which are equivalent as space groups
+  # 下面的结果就是在norm作用下按 orbits 归类的结果：
+
+  #  该函数中的下面的逻辑，会清除 ext[1] 变量的内容，
+  #  故该函数无法第二次调用：
+  #  while ll<>[] do
+  #   SubtractSet( ll, orb );
+  #  od; 
+  oscee := CollectEquivExtensions( ext[1], ext[2], norm, P );
+  # For debug
+  # oscee := dev1CollectEquivExtensions( ext[1], ext[2], norm, PZ );
+  
+
+  # osnpg:=OrbitOfStandardAffineCrystGroupOnLeftByNormalizerPointGroup(S);
+  # M := osnpg.M;
+  # orb := osnpg.orbs;
+  # norm := osnpg.norms;
+
+  # # 不完全相同，但是它们之间以纯平移共轭一一对应：
+  # for i in Difference( orb, oscee[2] ) do
+  #   for j in Difference( oscee[2], orb ) do
+  #     sol := SolveInhomEquationsModZ(M, i - j, false)[1];
+  #     if not IsEmpty(sol) then
+  #       Print(i, " ",j,"\n");
+  #     fi; 
+  #   od;
+  # od;
+
+  # 如下，即可从 oscee 中提取出当前SG在 std 表示下的被norm 共轭的所有可能的 orbits： 
+  # 注意和当前的惯例 matrices acting on the left or right 的情况对应：
+  # For matrices acting on the right
+  # 这里的用法和我的写法是一致的：
+  # https://www.math.colostate.edu/~hulpke/GAPQA/qa7.html
+  M:=TransposedMat(Concatenation(List( Pgen, x -> TransposedMat(x) - IdentityMat(d) )));
+
+  # # 和 ConjugatorSpaceGroupsStdSamePG 中的算法比较：
+  # M1 := List( [1..d], i->[] ); i := 0;
+
+  # for g in Pgen do
+  #     g := g - I;
+  #     M1{[1..d]}{[1..d]+i*d} := g{[1..d]}{[1..d]};
+  #     i := i+1;
+  # od;
+  # # 相等：
+  # M = M1;
+
+  # 另一种方法：
+  # List( Pgen, x -> x - IdentityMat(d) );
+  # List([1..d], i -> Flat(List( last, x ->  x[i])))=M;
+
+  Sgen:=List( Pgen, x -> PreImagesRepresentative(PointHomomorphism( S ), x ) );  
+  t:= List(Concatenation(List(Sgen, x ->x[d+1]{[1..d]})), FractionModOne);
+  pos:=First([1..Size(oscee)], i -> First( oscee[i], x -> not IsEmpty( SolveInhomEquationsModZ(M, t -x, true)[1] ) ) <> fail );
+
+  orbs := oscee[pos];
+  return orbs;
+
+end );  
+
+
 
 # 这个是进一步深入系统研究crystallography space groups的非常好的工具集：
 # 基于carat的进一步研究：
