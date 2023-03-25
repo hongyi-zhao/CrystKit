@@ -1,5 +1,5 @@
 #
-# CrystKit: The crystallographic groups kit based on GAP related packages and interface to other 3rd tools.
+# CrystKit: The crystallographic groups kit based on GAP related packages and interfaces to other 3rd tools.
 #
 # This file is a script which compiles the package manual.
 #

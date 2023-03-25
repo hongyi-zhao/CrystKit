@@ -1,5 +1,5 @@
 #
-# CrystKit: The crystallographic groups kit based on GAP related packages and interface to other 3rd tools.
+# CrystKit: The crystallographic groups kit based on GAP related packages and interfaces to other 3rd tools.
 #
 # This file contains package meta data. For additional information on
 # the meaning and correct usage of these fields, please consult the
@@ -9,7 +9,7 @@
 SetPackageInfo( rec(
 
 PackageName := "CrystKit",
-Subtitle := "The crystallographic groups kit based on GAP related packages and interface to other 3rd tools.",
+Subtitle := "The crystallographic groups kit based on GAP related packages and interfaces to other 3rd tools.",
 Version := "0.1",
 Date := "28/01/2023", # dd/mm/yyyy format
 License := "GPL-2.0-or-later",
@@ -60,7 +60,7 @@ PackageDoc := rec(
   HTMLStart := "doc/chap0_mj.html",
   PDFFile   := "doc/manual.pdf",
   SixFile   := "doc/manual.six",
-  LongTitle := "The crystallographic groups kit based on GAP related packages and interface to other 3rd tools.",
+  LongTitle := "The crystallographic groups kit based on GAP related packages and interfaces to other 3rd tools.",
 ),
 
 Dependencies := rec(
