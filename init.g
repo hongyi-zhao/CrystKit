@@ -5,3 +5,5 @@
 #
 
 ReadPackage( "CrystKit", "gap/CrystKit.gd");
+
+ReadPackage( "CrystKit", "gap/names/names.gd");
