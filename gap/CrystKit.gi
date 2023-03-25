@@ -313,6 +313,7 @@ end );
 # By the way -- I had a brief look what your function OrderByLatticeDimensionCrt needs to do,
 # and wrote an ad-hoc function NewFiniteOrdersOfGLNZ with the same functionality:
 
+# Thanks to Stefan Kohl <sk239@st-andrews.ac.uk> for providing the following function:
 InstallGlobalFunction( PhipnInverse,  function ( n )
 
   local  qs, p, k;
@@ -336,6 +337,7 @@ InstallGlobalFunction( PhipnInverse,  function ( n )
   return Set(qs);
 end );
 
+# Thanks to Stefan Kohl <sk239@st-andrews.ac.uk> for providing the following function:
 InstallGlobalFunction( NewFiniteOrdersOfGLNZ, function ( n )
 
   local  orders, build, P, P2, choices, invs;
@@ -365,6 +367,7 @@ InstallGlobalFunction( NewFiniteOrdersOfGLNZ, function ( n )
   od;
   orders := Union(orders,2*Filtered(orders,n->n mod 2 = 1));
   return orders;
+
 end );
 
 # For n = 100, I observe similar timings as those you report --
