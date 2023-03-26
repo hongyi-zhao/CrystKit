@@ -941,7 +941,7 @@ end );
 # About my research results on the minimal generating set of space groups and my thanks to you.
 # https://mail.google.com/mail/u/0/?ogbl#drafts/KtbxLwHDlCCBldrFJCXLMDsMVGZBLcklzL
 
-# Ask for your comments and suggestions about my implementation of the MinimalGeneratingSetSolvableSpaceGroupByPcpGroup.
+# Ask for your comments and suggestions about my implementation of the MinimalGeneratingSetSolvableAffineCrystGroupByPcpGroup.
 # https://mail.google.com/mail/u/0/?ogbl#inbox/QgrcJHsHqgRmwLtpXtLbsrWKXXWRXfgncNL
 #  Dear Zhao,
 
@@ -962,7 +962,7 @@ end );
 # 在找出tmgs后，如果当前的 长度仍然大于 b，则可以在 bound 到 Size( tmgs) - 1 
 # 的范围内进行tupgens的更彻底的搜索。
 # 但是，考虑到目前的结果合理性， Stefan在上面的评注以及进一步细化实现的不易。似乎并没有进一步处理的必要。
-InstallGlobalFunction( MinimalGeneratingSetSolvableSpaceGroupByPcpGroup, function( gens )
+InstallGlobalFunction( MinimalGeneratingSetSolvableAffineCrystGroupByPcpGroup, function( gens )
   local d, ntgens, G, iso, epi, H, Hgens, sgs, bound, cmgs, sch, cmb,
         tupgens, tmgs, mgs, i, k, s, t, x;
 
@@ -974,11 +974,6 @@ InstallGlobalFunction( MinimalGeneratingSetSolvableSpaceGroupByPcpGroup, functio
   fi;
   
   d := DimensionOfMatrixGroup( Group(gens) ) - 1;
-  # The following assumption is not valid for representations on arbitrary basis which is not covered by this algorithm.
-  # Here, it is assumed that the translation subgroup has full rank, which means that they are complete periodic space groups, a.k.a., n D groups with n D translation lattice 
-  # and they have the integer/standard/Normal lattice Translation Generators.
-  ntgens:= List( IdentityMat(d) ,x -> AugmentedMatrixOnLeft( IdentityMat(d), x ) ); 
-  gens := Unique(Concatenation( gens, ntgens ));
 
   G := AffineCrystGroupOnLeft(gens);
   iso:=IsomorphismPcpGroup(G);
