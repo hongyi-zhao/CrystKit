@@ -413,6 +413,7 @@ end );
 
 # 因为 cryst 的相关bug已经修复，故可以不再使用fr包：
 # https://github.com/gap-packages/cryst/pull/33#issuecomment-1427933014
+# https://github.com/gap-packages/cryst/commit/e761436db386107f3c0b60a927bbc352b3220d58
 # LoadPackage("fr");
 InstallGlobalFunction( OrbitCrystStdByNormalizerPointGroup, function( S )
   local P, d, Pgen, Sgen, NPgen, NP, I, M, hom, t, t1, t2, sol,
