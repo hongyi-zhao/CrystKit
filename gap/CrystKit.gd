@@ -24,8 +24,8 @@ DeclareGlobalFunction( "AugmentedMatrixOnLeft" );
 
 DeclareGlobalFunction( "PhipnInverse" );
 DeclareGlobalFunction( "NewFiniteOrdersOfGLNZ" );
-DeclareGlobalFunction( "OrbitOfStandardAffineCrystGroupOnLeftByNormalizerPointGroup" );
-DeclareGlobalFunction( "OrbitOfStandardAffineCrystGroupByCollectEquivExtensions" );
+DeclareGlobalFunction( "OrbitCrystStdByNormalizerPointGroup" );
+DeclareGlobalFunction( "OrbitCrystStdByCollectEquivExtensions" );
 
 DeclareGlobalFunction( "AffineIsomorphismSpaceGroups" );
 DeclareGlobalFunction( "IdentifySpaceGroup" );

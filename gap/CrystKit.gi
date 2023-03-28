@@ -168,7 +168,7 @@ InstallGlobalFunction( CaratQ_catalog, function( str, out )
 
   local dir, shell, instr, _in, _out,
         cmd, program, cs, args,
-        err; 
+        err, x; 
        
     # execute in the current directory
     dir := DirectoryCurrent();
@@ -178,7 +178,9 @@ InstallGlobalFunction( CaratQ_catalog, function( str, out )
     
     # _in := InputTextString( str );
     # 该命令的 str 末尾要求必须以空格隔开，后接 out：
-    instr := Concatenation( Chomp(str), " ", out, "\nq"  );
+    str := Filtered(SplitString(str, "\n"), x -> not IsEmpty(x));
+    str := JoinStringsWithSeparator(str, "\n");
+    instr := Concatenation( str, " ", out, "\nq"  );
     _in := InputTextString( instr );
 
     # get temporary file name 
@@ -412,11 +414,23 @@ end );
 # 因为 cryst 的相关bug已经修复，故可以不再使用fr包：
 # https://github.com/gap-packages/cryst/pull/33#issuecomment-1427933014
 # LoadPackage("fr");
-InstallGlobalFunction( OrbitOfStandardAffineCrystGroupOnLeftByNormalizerPointGroup, function( S )
+InstallGlobalFunction( OrbitCrystStdByNormalizerPointGroup, function( S )
   local P, d, Pgen, Sgen, NPgen, NP, I, M, hom, t, t1, t2, sol,
         orb, orbs, norms, nelm, cnt, sch, conv, threshold, maxord, 
-        ord, n, N, NSgen, iso, F, Fgen, g, i, j;
+        ord, n, N, NSgen, iso, F, Fgen, res, g, i, j;
   
+  if not IsStandardAffineCrystGroup( S ) then
+    Error("S must be a StandardAffineCrystGroup");
+  fi;
+
+  if IsAffineCrystGroupOnRight( S ) then
+    S := TransposedMatrixGroup( S );
+    res := OrbitCrystStdByNormalizerPointGroup( S );
+    res.M := TransposedMat( res.M );
+    res.norms := List(res.norms, TransposedMat);
+    return res;          
+  fi;
+
   d := DimensionOfMatrixGroup(S) - 1;
   I := IdentityMat(d);
 
@@ -484,11 +498,12 @@ InstallGlobalFunction( OrbitOfStandardAffineCrystGroupOnLeftByNormalizerPointGro
   # 下面的处理方法具有统一性： 
   # catch the trivial cases
   if IsTrivial(P) or IsEmpty(NPgen) then
-    return rec( 
+    res := rec( 
                 orbs  := orbs,
                 norms  := norms,
                 M     := M 
-                );
+              );
+    return res;
   fi; 
    
   NP:=Group(NPgen);
@@ -529,11 +544,12 @@ InstallGlobalFunction( OrbitOfStandardAffineCrystGroupOnLeftByNormalizerPointGro
     # if Order(NP) = Size(nelm) or (Order(NP) = infinity and cnt >= threshold)  then 
     # The following condition is sufficient for obtaining a complete orbit
     if cnt >= threshold or Order(NP) = Size(nelm)  then 
-      return rec( 
+      res := rec( 
                   orbs  := orbs,
                   norms  := norms,
                   M     := M 
-                  );
+                );
+      return res;
       # break;
     fi;
 
@@ -617,9 +633,9 @@ InstallGlobalFunction( OrbitOfStandardAffineCrystGroupOnLeftByNormalizerPointGro
 
 end );
 
-# 和 OrbitOfStandardAffineCrystGroupOnLeftByNormalizerPointGroup 的结果进行比较：
+# 和 OrbitCrystStdByNormalizerPointGroup 的结果进行比较：
 InstallGlobalFunction(
-OrbitOfStandardAffineCrystGroupByCollectEquivExtensions, function( S, transpose )
+OrbitCrystStdByCollectEquivExtensions, function( S, transpose )
   local P, d, norm, Pgen, I, 
         N, F, rels, mat, ext, oscee, orbs,
         Sgen, t, M, pos, x;
@@ -707,7 +723,7 @@ OrbitOfStandardAffineCrystGroupByCollectEquivExtensions, function( S, transpose 
   # oscee := dev1CollectEquivExtensions( ext[1], ext[2], norm, PZ );
   
 
-  # osnpg:=OrbitOfStandardAffineCrystGroupOnLeftByNormalizerPointGroup(S);
+  # osnpg:=OrbitCrystStdByNormalizerPointGroup(S);
   # M := osnpg.M;
   # orb := osnpg.orbs;
   # norm := osnpg.norms;
@@ -839,7 +855,7 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
     # S1s ^ C3 = S2s ^ C4 
     # S1s ^ C3 * (C4 ^ -1) = S2s = S2^C2
     # S1 ^ (C1 * C3 * C4 ^ -1 * C2 ^ -1) = S2
-    osnpg := OrbitOfStandardAffineCrystGroupOnLeftByNormalizerPointGroup( S2s );
+    osnpg := OrbitCrystStdByNormalizerPointGroup( S2s );
     M := osnpg.M;
     orb := osnpg.orbs;
     norm := osnpg.norms;
