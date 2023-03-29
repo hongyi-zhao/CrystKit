@@ -1,3 +1,52 @@
+# Define variable-length `Indeterminate's in function.
+# https://mail.google.com/mail/u/0/?ogbl#sent/QgrcJHsBqxpXbHCSnPqBGGBZRDqphmxvpZb
+InstallGlobalFunction( IdentifyGroupGenerators3d, function( gens )
+  
+  local x,y,z, var, d, g;
+  x:=Indeterminate(Rationals,1); SetName(x,"x");
+  y:=Indeterminate(Rationals,2); SetName(y,"y");
+  z:=Indeterminate(Rationals,3); SetName(z,"z");
+  var := [x,y,z,1];
+  d := Size(var) - 1;
+  gens:=List( gens , g -> g * var);
+  gens:=gens{[1..Size(gens)]}{[1..d]};
+  return gens;
+
+end );
+
+InstallGlobalFunction( IdentifyGroupGenerators4d, function( gens )
+
+  local x,y,z,t, var, d, g;
+  x:=Indeterminate(Rationals,1); SetName(x,"x");
+  y:=Indeterminate(Rationals,2); SetName(y,"y");
+  z:=Indeterminate(Rationals,3); SetName(z,"z");
+  t:=Indeterminate(Rationals,4); SetName(t,"t");
+  var := [x,y,z,t,1];
+  d := Size(var) - 1;
+  gens:=List( gens , g -> g * var);
+  gens:=gens{[1..Size(gens)]}{[1..d]};
+  return gens;
+
+end );
+
+
+# Set(DimensionsMat(m));
+# Size(Set(m,Size));
+InstallGlobalFunction( AugmentedMatrixOnLeft, function(m, b)
+  
+  local d, g, i;
+
+  d := Unique(DimensionsMat(m));
+  if Size(d) <> 1 then
+    Error("Matrix is not square.");
+  fi;
+  d := d[1];
+  g := List([1..d], i -> Concatenation(m[i], [b[i]]));
+  Add(g, Concatenation(Zero([1..d]), [1]));
+  return g;
+
+end );
+
 
 #############################################################################
 ##
@@ -212,52 +261,67 @@ InstallGlobalFunction( CaratQ_catalog, function( str, out )
 end );
 
 
-# Define variable-length `Indeterminate's in function.
-# https://mail.google.com/mail/u/0/?ogbl#sent/QgrcJHsBqxpXbHCSnPqBGGBZRDqphmxvpZb
-InstallGlobalFunction( IdentifyGroupGenerators3d, function( gens )
+InstallGlobalFunction( 
+IdentifySpaceGroup, function( S )
   
-  local x,y,z, var, d, g;
-  x:=Indeterminate(Rationals,1); SetName(x,"x");
-  y:=Indeterminate(Rationals,2); SetName(y,"y");
-  z:=Indeterminate(Rationals,3); SetName(z,"z");
-  var := [x,y,z,1];
-  d := Size(var) - 1;
-  gens:=List( gens , g -> g * var);
-  gens:=gens{[1..Size(gens)]}{[1..d]};
-  return gens;
+  local d, res, name, nr, nrs, Sref, c, C, i;
 
-end );
-
-InstallGlobalFunction( IdentifyGroupGenerators4d, function( gens )
-
-  local x,y,z,t, var, d, g;
-  x:=Indeterminate(Rationals,1); SetName(x,"x");
-  y:=Indeterminate(Rationals,2); SetName(y,"y");
-  z:=Indeterminate(Rationals,3); SetName(z,"z");
-  t:=Indeterminate(Rationals,4); SetName(t,"t");
-  var := [x,y,z,t,1];
-  d := Size(var) - 1;
-  gens:=List( gens , g -> g * var);
-  gens:=gens{[1..Size(gens)]}{[1..d]};
-  return gens;
-
-end );
-
-
-# Set(DimensionsMat(m));
-# Size(Set(m,Size));
-InstallGlobalFunction( AugmentedMatrixOnLeft, function(m, b)
+  d := DimensionOfMatrixGroup( S ) - 1;
+  # CrystCatRecord(TransposedMatrixGroup(S)).parameters;
   
-  local d, g, i;
-
-  d := Unique(DimensionsMat(m));
-  if Size(d) <> 1 then
-    Error("Matrix is not square.");
+  if d > 6 or not IsSpaceGroup( S ) then
+    Error("only applicable to space groups in dimensions up to 6");
   fi;
-  d := d[1];
-  g := List([1..d], i -> Concatenation(m[i], [b[i]]));
-  Add(g, Concatenation(Zero([1..d]), [1]));
-  return g;
+
+  if IsAffineCrystGroupOnRight( S ) then
+    S := TransposedMatrixGroup( S );
+    # 此时的进一步递归处理：
+    res := IdentifySpaceGroup( S );
+    res[2] := TransposedMat(res[2]) ^-1;
+    return res;
+  fi;
+
+  name:=CaratName( S );
+
+  if d = 2 then 
+    nr:=Position(cryst2names, name);
+    Sref:=SpaceGroupOnLeftIT(d,nr);
+    C := AffineIsomorphismSpaceGroups(S, Sref);
+  elif d = 3 then
+      
+    # cryst3names 为最精细分类，故aff3names没有必要使用：
+    # Positions(aff3names, name );
+    nrs:=Positions(cryst3names, name );
+    
+    # determine from the enantiomorphic_pairs
+    if Size(nrs) = 1 or 1 <> DeterminantMat(AffineIsomorphismSpaceGroups(S,SpaceGroupOnLeftIT(d,nrs[2]))) then
+      nr := nrs[1];
+    else
+      nr := nrs[2];
+    fi;
+    
+    Sref:=SpaceGroupOnLeftIT(d,nr);
+    C := AffineIsomorphismSpaceGroups(S, Sref);
+
+  elif d = 4 then
+    
+    nr:=Position(aff4names, name);
+    Sref:=TransposedMatrixGroup(SpaceGroup(d,nr));
+    C := AffineIsomorphismSpaceGroups(S, Sref);
+
+  else
+    nr := fail;
+    c := TransposedMat(InternalBasis(S));
+    C := AugmentedMatrixOnLeft( c, 0 *[1..d] );
+  fi;
+ 
+  if nr <> fail then
+    res := [Concatenation([nr], name), C];
+    return res;
+  else
+    res := [name[1], C];
+    return res;
+  fi;
 
 end );
 
@@ -879,71 +943,6 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
     # The incorrect logic implemented in the ConjugatorSpaceGroupsStdSamePG and ConjugatorSpaceGroups.
     # https://github.com/gap-packages/cryst/issues/38
     # return fail;
-
-end );
-
-
-InstallGlobalFunction( 
-IdentifySpaceGroup, function( S )
-  
-  local d, res, name, nr, nrs, Sref, c, C, i;
-
-  d := DimensionOfMatrixGroup( S ) - 1;
-  # CrystCatRecord(TransposedMatrixGroup(S)).parameters;
-  
-  if d > 6 or not IsSpaceGroup( S ) then
-    Error("only applicable to space groups in dimensions up to 6");
-  fi;
-
-  if IsAffineCrystGroupOnRight( S ) then
-    S := TransposedMatrixGroup( S );
-    # 此时的进一步递归处理：
-    res := IdentifySpaceGroup( S );
-    res[2] := TransposedMat(res[2]) ^-1;
-    return res;
-  fi;
-
-  name:=CaratName( S );
-
-  if d = 2 then 
-    nr:=Position(cryst2names, name);
-    Sref:=SpaceGroupOnLeftIT(d,nr);
-    C := AffineIsomorphismSpaceGroups(S, Sref);
-  elif d = 3 then
-      
-    # cryst3names 为最精细分类，故aff3names没有必要使用：
-    # Positions(aff3names, name );
-    nrs:=Positions(cryst3names, name );
-    
-    # determine from the enantiomorphic_pairs
-    if Size(nrs) = 1 or 1 <> DeterminantMat(AffineIsomorphismSpaceGroups(S,SpaceGroupOnLeftIT(d,nrs[2]))) then
-      nr := nrs[1];
-    else
-      nr := nrs[2];
-    fi;
-    
-    Sref:=SpaceGroupOnLeftIT(d,nr);
-    C := AffineIsomorphismSpaceGroups(S, Sref);
-
-  elif d = 4 then
-    
-    nr:=Position(aff4names, name);
-    Sref:=TransposedMatrixGroup(SpaceGroup(d,nr));
-    C := AffineIsomorphismSpaceGroups(S, Sref);
-
-  else
-    nr := fail;
-    c := TransposedMat(InternalBasis(S));
-    C := AugmentedMatrixOnLeft( c, 0 *[1..d] );
-  fi;
- 
-  if nr <> fail then
-    res := [Concatenation([nr], name), C];
-    return res;
-  else
-    res := [name[1], C];
-    return res;
-  fi;
 
 end );
 
