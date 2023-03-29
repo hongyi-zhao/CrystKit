@@ -415,18 +415,20 @@ end );
 # https://github.com/gap-packages/cryst/pull/33#issuecomment-1427933014
 # https://github.com/gap-packages/cryst/commit/e761436db386107f3c0b60a927bbc352b3220d58
 # LoadPackage("fr");
-InstallGlobalFunction( OrbitCrystStdByNormalizerPointGroup, function( S )
+InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S )
   local P, d, Pgen, Sgen, NPgen, NP, I, M, hom, t, t1, t2, sol,
         orb, orbs, norms, nelm, cnt, sch, conv, threshold, maxord, 
         ord, n, N, NSgen, iso, F, Fgen, res, g, i, j;
-  
-  if not IsStandardAffineCrystGroup( S ) then
-    Error("S must be a StandardAffineCrystGroup");
+
+  # Call the PackageName variable from with the corresponding package.        
+  # https://mail.google.com/mail/u/0/?ogbl#sent/KtbxLxGcCbLxdbmDRqglCFpbRFhGQNpKLq
+  if not IsStandardSpaceGroup( S ) then
+    Error("CrystKit: IsStandardSpaceGroup failed");
   fi;
 
   if IsAffineCrystGroupOnRight( S ) then
     S := TransposedMatrixGroup( S );
-    res := OrbitCrystStdByNormalizerPointGroup( S );
+    res := OrbitSpaceGroupStdByNormalizerPointGroup( S );
     res.M := TransposedMat( res.M );
     res.norms := List(res.norms, TransposedMat);
     return res;          
@@ -634,19 +636,24 @@ InstallGlobalFunction( OrbitCrystStdByNormalizerPointGroup, function( S )
 
 end );
 
-# 和 OrbitCrystStdByNormalizerPointGroup 的结果进行比较：
+# 和 OrbitSpaceGroupStdByNormalizerPointGroup 的结果进行比较：
 InstallGlobalFunction(
-OrbitCrystStdByCollectEquivExtensions, function( S, transpose )
+OrbitSpaceGroupStdByCollectEquivExtensions, function( S )
   local P, d, norm, Pgen, I, 
         N, F, rels, mat, ext, oscee, orbs,
         Sgen, t, M, pos, x;
 
   # S:= SpaceGroup(4, 834);
   # S:= SpaceGroupOnRightIT(3,74);
-  
-  # For matrices acting on the left 
-  # transpose:=true; 
-  if transpose then
+
+  if not IsStandardSpaceGroup( S ) then
+    Error("CrystKit: IsStandardSpaceGroup failed");
+  fi;
+
+  # By default, the related functions called here implemented in
+  # Cryst package are designed for matrices acting on the right 
+  # 
+  if IsAffineCrystGroupOnLeft( S ) then
     S := TransposedMatrixGroup(S);
   fi;
 
@@ -655,40 +662,20 @@ OrbitCrystStdByCollectEquivExtensions, function( S, transpose )
   I := IdentityMat(d);
   norm := Filtered(GeneratorsOfGroup( Normalizer( GL(d, Integers), P ) ), x -> not x in P);
  
+  if IsTrivial( P ) then
+    # d:=3;
+    # S := MakeSpaceGroup( d, [], [], false );
+    # S := MakeSpaceGroup( d, [], [], transpose );
+    # t := Concatenation(List( GeneratorsOfGroup(S), x -> x[1+d]{[1..d]} ));
 
-  #  if not IsIntegerMatrixGroup( grp ) then
-  #     Error( "the point group must be an integer matrix group" );
-  #  fi;
-
-  #  if not IsFinite( grp ) then
-  #     Error("the point group must be finite" );
-  #  fi;
-
-  #  # catch the trivial case
-  #  if IsTrivial( grp ) then
-  #     # GeneratorsOfGroup(S);
-  #     S := MakeSpaceGroup( d, [], [], transpose );
-  #     if orbsflag then
-  #        return [[S]];
-  #     else
-  #        return [ S ];
-  #     fi;
-  #  fi;
-
-   if IsTrivial( P ) then
-      # d:=3;
-      # S := MakeSpaceGroup( d, [], [], false );
-      # S := MakeSpaceGroup( d, [], [], transpose );
-      # t := Concatenation(List( GeneratorsOfGroup(S), x -> x[1+d]{[1..d]} ));
-
-      # Sgen 是按照如下规则得到的： 
-      # PreImagesRepresentative( PointHomomorphism(S) , IdentityMat(d));
-      # 故此时为：
-      Sgen := [ IdentityMat(d + 1) ];
-      t := List(Concatenation(List(Sgen, x ->x{[1..d]}[d+1])), FractionModOne);
-      orbs := [t];
-      return orbs;
-   fi;
+    # In this algorithm, Sgen is obtianed as follows: 
+    # PreImagesRepresentative( PointHomomorphism(S) , IdentityMat(d));
+    # 
+    Sgen := [ IdentityMat(d + 1) ];
+    t := List( Concatenation(List(Sgen, x ->x{[1..d]}[d+1])), FractionModOne );
+    orbs := [t];
+    return orbs;
+  fi;
 
   # first get group relators for grp
   N := NiceObject( P );
@@ -724,7 +711,7 @@ OrbitCrystStdByCollectEquivExtensions, function( S, transpose )
   # oscee := dev1CollectEquivExtensions( ext[1], ext[2], norm, PZ );
   
 
-  # osnpg:=OrbitCrystStdByNormalizerPointGroup(S);
+  # osnpg:=OrbitSpaceGroupStdByNormalizerPointGroup(S);
   # M := osnpg.M;
   # orb := osnpg.orbs;
   # norm := osnpg.norms;
@@ -771,7 +758,6 @@ OrbitCrystStdByCollectEquivExtensions, function( S, transpose )
 end );  
 
 
-
 # 这个是进一步深入系统研究crystallography space groups的非常好的工具集：
 # 基于carat的进一步研究：
 # https://lbfm-rwth.github.io/carat/doc/introduction.html#examples
@@ -781,9 +767,16 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
           S1s, S2s, S3s, 
           P1s, P2s, S3sgen, t3s, t, sol, pos,
           c1, C1, c2, C2,  c3, C3, C4, C,
-          osnpg, M, orb, norm; 
+          osnpg, M, orb, norm;
 
-    # We work with AffineCrystGroupOnLeft
+    # Affine crystallographic groups vs space groups.
+    # https://github.com/gap-packages/cryst/issues/36#issuecomment-1472348928
+    # Space groups have a translation subgroup of full rank d, whereas general affine crystallographic groups may have a translation subgroup of smaller rank.
+    if not IsSpaceGroup( S1 ) or not IsSpaceGroup( S2 ) then
+      Error("S1 and S2 must be space groups");
+    fi;
+
+    # We work with SpaceGroupOnLeft
     if IsAffineCrystGroupOnLeft( S1 ) <> IsAffineCrystGroupOnLeft( S2 ) then
       return fail;
     else
@@ -856,7 +849,7 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
     # S1s ^ C3 = S2s ^ C4 
     # S1s ^ C3 * (C4 ^ -1) = S2s = S2^C2
     # S1 ^ (C1 * C3 * C4 ^ -1 * C2 ^ -1) = S2
-    osnpg := OrbitCrystStdByNormalizerPointGroup( S2s );
+    osnpg := OrbitSpaceGroupStdByNormalizerPointGroup( S2s );
     M := osnpg.M;
     orb := osnpg.orbs;
     norm := osnpg.norms;
