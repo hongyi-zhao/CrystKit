@@ -415,20 +415,20 @@ end );
 # https://github.com/gap-packages/cryst/pull/33#issuecomment-1427933014
 # https://github.com/gap-packages/cryst/commit/e761436db386107f3c0b60a927bbc352b3220d58
 # LoadPackage("fr");
-InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S )
+InstallGlobalFunction( OrbitCrystStdByNormalizerPointGroup, function( S )
   local P, d, Pgen, Sgen, NPgen, NP, I, M, hom, t, t1, t2, sol,
         orb, orbs, norms, nelm, cnt, sch, conv, threshold, maxord, 
         ord, n, N, NSgen, iso, F, Fgen, res, g, i, j;
 
   # Call the PackageName variable from with the corresponding package.        
   # https://mail.google.com/mail/u/0/?ogbl#sent/KtbxLxGcCbLxdbmDRqglCFpbRFhGQNpKLq
-  if not IsStandardSpaceGroup( S ) then
-    Error("CrystKit: IsStandardSpaceGroup failed");
+  if not IsStandardAffineCrystGroup( S ) then
+    Error("only work with StandardAffineCrystGroup");
   fi;
 
   if IsAffineCrystGroupOnRight( S ) then
     S := TransposedMatrixGroup( S );
-    res := OrbitSpaceGroupStdByNormalizerPointGroup( S );
+    res := OrbitCrystStdByNormalizerPointGroup( S );
     res.M := TransposedMat( res.M );
     res.norms := List(res.norms, TransposedMat);
     return res;          
@@ -636,9 +636,9 @@ InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S )
 
 end );
 
-# 和 OrbitSpaceGroupStdByNormalizerPointGroup 的结果进行比较：
+# 和 OrbitCrystStdByNormalizerPointGroup 的结果进行比较：
 InstallGlobalFunction(
-OrbitSpaceGroupStdByCollectEquivExtensions, function( S )
+OrbitCrystStdByCollectEquivExtensions, function( S )
   local P, d, norm, Pgen, I, 
         N, F, rels, mat, ext, oscee, orbs,
         Sgen, t, M, pos, x;
@@ -646,8 +646,8 @@ OrbitSpaceGroupStdByCollectEquivExtensions, function( S )
   # S:= SpaceGroup(4, 834);
   # S:= SpaceGroupOnRightIT(3,74);
 
-  if not IsStandardSpaceGroup( S ) then
-    Error("CrystKit: IsStandardSpaceGroup failed");
+  if not IsStandardAffineCrystGroup( S ) then
+    Error("only work with StandardAffineCrystGroup");
   fi;
 
   # By default, the related functions called here implemented in
@@ -711,7 +711,7 @@ OrbitSpaceGroupStdByCollectEquivExtensions, function( S )
   # oscee := dev1CollectEquivExtensions( ext[1], ext[2], norm, PZ );
   
 
-  # osnpg:=OrbitSpaceGroupStdByNormalizerPointGroup(S);
+  # osnpg:=OrbitCrystStdByNormalizerPointGroup(S);
   # M := osnpg.M;
   # orb := osnpg.orbs;
   # norm := osnpg.norms;
@@ -849,7 +849,7 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
     # S1s ^ C3 = S2s ^ C4 
     # S1s ^ C3 * (C4 ^ -1) = S2s = S2^C2
     # S1 ^ (C1 * C3 * C4 ^ -1 * C2 ^ -1) = S2
-    osnpg := OrbitSpaceGroupStdByNormalizerPointGroup( S2s );
+    osnpg := OrbitCrystStdByNormalizerPointGroup( S2s );
     M := osnpg.M;
     orb := osnpg.orbs;
     norm := osnpg.norms;
@@ -951,7 +951,7 @@ end );
 # About my research results on the minimal generating set of space groups and my thanks to you.
 # https://mail.google.com/mail/u/0/?ogbl#drafts/KtbxLwHDlCCBldrFJCXLMDsMVGZBLcklzL
 
-# Ask for your comments and suggestions about my implementation of the MinimalGeneratingSetSolvableAffineCrystGroupByPcpGroup.
+# Ask for your comments and suggestions about my implementation of the MinimalGeneratingSetAffineCrystGroup.
 # https://mail.google.com/mail/u/0/?ogbl#inbox/QgrcJHsHqgRmwLtpXtLbsrWKXXWRXfgncNL
 #  Dear Zhao,
 
@@ -972,21 +972,29 @@ end );
 # 在找出tmgs后，如果当前的 长度仍然大于 b，则可以在 bound 到 Size( tmgs) - 1 
 # 的范围内进行tupgens的更彻底的搜索。
 # 但是，考虑到目前的结果合理性， Stefan在上面的评注以及进一步细化实现的不易。似乎并没有进一步处理的必要。
-InstallGlobalFunction( MinimalGeneratingSetSolvableAffineCrystGroupByPcpGroup, function( gens )
-  local d, ntgens, G, iso, epi, H, Hgens, sgs, bound, cmgs, sch, cmb,
-        tupgens, tmgs, mgs, i, k, s, t, x;
+InstallGlobalFunction( MinimalGeneratingSetAffineCrystGroup, function( S )
+  local d, ntgens,  iso, epi, H, Hgens, sgs, bound, cmgs, sch, cmb,
+        tupgens, tmgs, mgs, res, i, k, s, t, x;
 
-  # gens := GeneratorsOfGroup(TransposedMatrixGroup(SpaceGroup(2,14)));
+  # S := SpaceGroup(4,4565);
+  # S := SpaceGroup(4,4);
+  # S:= AffineCrystGroupOnLeft(SGGenSetBC[229]);
 
-  # do a few basic checks
-  if ForAny( gens, x -> not IsAffineMatrixOnLeft( x ) ) then
-      Error("use only for an AffineCrystGroupOnLeft");
+  if not IsSolvable(S) then
+    Error( "only work with solvable AffineCrystGroup" );
   fi;
   
-  d := DimensionOfMatrixGroup( Group(gens) ) - 1;
+  # do a few basic checks
+  if IsAffineCrystGroupOnRight( S ) then
+    S := TransposedMatrixGroup( S );
+    res := MinimalGeneratingSetAffineCrystGroup( S );
+    res.mgs := List(res.mgs, TransposedMat);
+    return res;
+  fi;
+  
+  d := DimensionOfMatrixGroup( S ) - 1;
 
-  G := AffineCrystGroupOnLeft(gens);
-  iso:=IsomorphismPcpGroup(G);
+  iso:=IsomorphismPcpGroup( S );
   H:=Image(iso);
   Hgens:=GeneratorsOfGroup(H);
   sgs:=SmallGeneratingSet(H);
@@ -996,7 +1004,7 @@ InstallGlobalFunction( MinimalGeneratingSetSolvableAffineCrystGroupByPcpGroup, f
   # Try to obtain the MinimalGeneratingSet of an FP group with the clues of the relationship analysis among the relators based on graph theory.
   # https://github.com/gap-packages/grape/issues/45#issuecomment-1345264858
   epi:=MaximalAbelianQuotient(H);
-  bound:=Maximum(List(List([ Image(epi), PointGroup(G) ], MinimalGeneratingSet), Size));
+  bound:=Maximum(List(List([ Image(epi), PointGroup(S) ], MinimalGeneratingSet), Size));
 
   # As long as it is not a cyclic group, at least two generators are required.
   if bound=1 and not IsAbelian(H) then
@@ -1058,6 +1066,9 @@ InstallGlobalFunction( MinimalGeneratingSetSolvableAffineCrystGroupByPcpGroup, f
   fi;
 
   mgs:=List( mgs, x -> PreImagesRepresentative(iso, x) );
-  return rec( mgs  := mgs,
+
+  res := rec( mgs  := mgs,
               bound  := bound );
+  return res;
+
 end );
