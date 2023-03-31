@@ -1,46 +1,65 @@
 # Define variable-length `Indeterminate's in function.
 # https://mail.google.com/mail/u/0/?ogbl#sent/QgrcJHsBqxpXbHCSnPqBGGBZRDqphmxvpZb
-InstallGlobalFunction( IdentifyGroupGenerators3d, function( gens )
+
+# https://www.cryst.ehu.es/cgi-bin/cryst/programs/checkgr.pl?tipog=gesp
+# https://iso.byu.edu/iso/findssghelp.php
+# The output notation for superspace-group operators will match that of the input: There are three choices: (x,y,z,t,u,v), (x1,x2,x3,x4,x5,x6), and (xs1,xs2,xs3,xs4,xs5,xs6). See the ISO(3+d)D help page for more information about these notations. 
+InstallGlobalFunction( IdentifyGroupGenerators, function( gens )
   
-  local x,y,z, var, d, g;
-  x:=Indeterminate(Rationals,1); SetName(x,"x");
-  y:=Indeterminate(Rationals,2); SetName(y,"y");
-  z:=Indeterminate(Rationals,3); SetName(z,"z");
-  var := [x,y,z,1];
-  d := Size(var) - 1;
-  gens:=List( gens , g -> g * var);
+  local d, x,y,z, t, u, v, vec, g;
+
+  if not ForAll(gens, IsAffineMatrixOnLeft) then
+    Error("AffineMatrixOnLeft test failed");
+  fi;
+
+  d := First(Set(DimensionsMat(gens[1]))) - 1;
+  
+  if d = 3 then
+    x:=X(Rationals,1); SetName(x,"x");
+    y:=X(Rationals,2); SetName(y,"y");
+    z:=X(Rationals,3); SetName(z,"z");
+    vec:= [x,y,z,1];
+  elif d = 4 then
+    x:=X(Rationals,1); SetName(x,"x");
+    y:=X(Rationals,2); SetName(y,"y");
+    z:=X(Rationals,3); SetName(z,"z");
+    t:=X(Rationals,4); SetName(t,"t");
+    vec:= [x,y,z,t,1];
+  elif d = 5 then
+    x:=X(Rationals,1); SetName(x,"x");
+    y:=X(Rationals,2); SetName(y,"y");
+    z:=X(Rationals,3); SetName(z,"z");
+    t:=X(Rationals,4); SetName(t,"t");
+    u:=X(Rationals,5); SetName(u,"u");
+    vec:= [x,y,z,t,u,1];
+
+  elif d = 6 then
+    x:=X(Rationals,1); SetName(x,"x");
+    y:=X(Rationals,2); SetName(y,"y");
+    z:=X(Rationals,3); SetName(z,"z");
+    t:=X(Rationals,4); SetName(t,"t");
+    u:=X(Rationals,5); SetName(u,"u");
+    v:=X(Rationals,6); SetName(v,"v");
+    vec:= [x,y,z,t,u,v,1];
+  else
+    Error( "Not yet supported" );
+  fi;
+
+  gens:=List( gens , g -> g * vec);
   gens:=gens{[1..Size(gens)]}{[1..d]};
   return gens;
 
 end );
 
-InstallGlobalFunction( IdentifyGroupGenerators4d, function( gens )
 
-  local x,y,z,t, var, d, g;
-  x:=Indeterminate(Rationals,1); SetName(x,"x");
-  y:=Indeterminate(Rationals,2); SetName(y,"y");
-  z:=Indeterminate(Rationals,3); SetName(z,"z");
-  t:=Indeterminate(Rationals,4); SetName(t,"t");
-  var := [x,y,z,t,1];
-  d := Size(var) - 1;
-  gens:=List( gens , g -> g * var);
-  gens:=gens{[1..Size(gens)]}{[1..d]};
-  return gens;
-
-end );
-
-
-# Set(DimensionsMat(m));
-# Size(Set(m,Size));
 InstallGlobalFunction( AugmentedMatrixOnLeft, function(m, b)
   
   local d, g, i;
 
-  d := Unique(DimensionsMat(m));
-  if Size(d) <> 1 then
-    Error("Matrix is not square.");
+  if Size( Set(DimensionsMat(m)) ) <> 1 then
+    Error( "linear part is not a square matrix" );    
   fi;
-  d := d[1];
+  d := First(Unique(DimensionsMat(m)));
   g := List([1..d], i -> Concatenation(m[i], [b[i]]));
   Add(g, Concatenation(Zero([1..d]), [1]));
   return g;

@@ -18,8 +18,7 @@ DeclareGlobalFunction( "CaratName" );
 DeclareGlobalFunction( "CaratReverse_name" );
 DeclareGlobalFunction( "CaratQ_catalog" );
 
-DeclareGlobalFunction( "IdentifyGroupGenerators3d" );
-DeclareGlobalFunction( "IdentifyGroupGenerators4d" );
+DeclareGlobalFunction( "IdentifyGroupGenerators" );
 DeclareGlobalFunction( "AugmentedMatrixOnLeft" );
 
 DeclareGlobalFunction( "PhipnInverse" );
