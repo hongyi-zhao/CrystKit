@@ -1,3 +1,5 @@
+DeclareGlobalFunction( "AugmentedMatrixOnLeft" );
+DeclareGlobalFunction( "IdentifyGroupGenerators" );
 
 #############################################################################
 ##
@@ -18,8 +20,6 @@ DeclareGlobalFunction( "CaratName" );
 DeclareGlobalFunction( "CaratReverse_name" );
 DeclareGlobalFunction( "CaratQ_catalog" );
 
-DeclareGlobalFunction( "IdentifyGroupGenerators" );
-DeclareGlobalFunction( "AugmentedMatrixOnLeft" );
 
 DeclareGlobalFunction( "PhipnInverse" );
 DeclareGlobalFunction( "NewFiniteOrdersOfGLNZ" );
