@@ -1,10 +1,9 @@
-# Define variable-length `Indeterminate's in function.
-# https://mail.google.com/mail/u/0/?ogbl#sent/QgrcJHsBqxpXbHCSnPqBGGBZRDqphmxvpZb
-
 # https://www.cryst.ehu.es/cgi-bin/cryst/programs/checkgr.pl?tipog=gesp
 # https://iso.byu.edu/iso/findssghelp.php
 # The output notation for superspace-group operators will match that of the input: There are three choices: (x,y,z,t,u,v), (x1,x2,x3,x4,x5,x6), and (xs1,xs2,xs3,xs4,xs5,xs6). See the ISO(3+d)D help page for more information about these notations. 
 
+# Define variable-length `Indeterminate's in function.
+# https://mail.google.com/mail/u/0/?ogbl#search/in%3Asent+gap/QgrcJHsBqxpXbHCSnPqBGGBZRDqphmxvpZb
 # How to utilize the following capability:
 # d:=4;
 # vec := Concatenation(List([1..d],x -> X(Rationals,x)), [1]);
