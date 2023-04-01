@@ -4,53 +4,28 @@
 
 # Define variable-length `Indeterminate's in function.
 # https://mail.google.com/mail/u/0/?ogbl#search/in%3Asent+gap/QgrcJHsBqxpXbHCSnPqBGGBZRDqphmxvpZb
-# How to utilize the following capability:
-# d:=4;
-# vec := Concatenation(List([1..d],x -> X(Rationals,x)), [1]);
-
 InstallGlobalFunction( IdentifyGroupGenerators, function( gens )
   
-  local d, x,y,z, t, u, v, vec, g;
+  local d, vecname, vec, g;
 
   if not ForAll(gens, IsAffineMatrixOnLeft) then
     Error("AffineMatrixOnLeft test failed");
   fi;
 
+  vecname:=["x","y","z","t","u","v"];
   d := First(Set(DimensionsMat(gens[1]))) - 1;
   
-  if d = 3 then
-    x:=X(Rationals,1); SetName(x,"x");
-    y:=X(Rationals,2); SetName(y,"y");
-    z:=X(Rationals,3); SetName(z,"z");
-    vec:= [x,y,z,1];
-  elif d = 4 then
-    x:=X(Rationals,1); SetName(x,"x");
-    y:=X(Rationals,2); SetName(y,"y");
-    z:=X(Rationals,3); SetName(z,"z");
-    t:=X(Rationals,4); SetName(t,"t");
-    vec:= [x,y,z,t,1];
-  elif d = 5 then
-    x:=X(Rationals,1); SetName(x,"x");
-    y:=X(Rationals,2); SetName(y,"y");
-    z:=X(Rationals,3); SetName(z,"z");
-    t:=X(Rationals,4); SetName(t,"t");
-    u:=X(Rationals,5); SetName(u,"u");
-    vec:= [x,y,z,t,u,1];
-
-  elif d = 6 then
-    x:=X(Rationals,1); SetName(x,"x");
-    y:=X(Rationals,2); SetName(y,"y");
-    z:=X(Rationals,3); SetName(z,"z");
-    t:=X(Rationals,4); SetName(t,"t");
-    u:=X(Rationals,5); SetName(u,"u");
-    v:=X(Rationals,6); SetName(v,"v");
-    vec:= [x,y,z,t,u,v,1];
-  else
-    Error( "Not yet supported" );
+  if d > Size(vecname) then
+    Error("Not yet supported");
   fi;
 
-  gens:=List( gens , g -> g * vec);
-  gens:=gens{[1..Size(gens)]}{[1..d]};
+  vec := List([1..d],x -> X(Rationals,x)); 
+  gens:=List( gens , g -> g{[1..d]}{[1..d]} * vec +g{[1..d]}[d+1] );
+ 
+  for i in [1..d] do
+    SetName(vec[i],vecname[i]);
+  od;
+  
   return gens;
 
 end );
