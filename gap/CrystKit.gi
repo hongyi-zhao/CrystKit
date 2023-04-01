@@ -4,6 +4,11 @@
 # https://www.cryst.ehu.es/cgi-bin/cryst/programs/checkgr.pl?tipog=gesp
 # https://iso.byu.edu/iso/findssghelp.php
 # The output notation for superspace-group operators will match that of the input: There are three choices: (x,y,z,t,u,v), (x1,x2,x3,x4,x5,x6), and (xs1,xs2,xs3,xs4,xs5,xs6). See the ISO(3+d)D help page for more information about these notations. 
+
+# How to utilize the following capability:
+# d:=4;
+# vec := Concatenation(List([1..d],x -> X(Rationals,x)), [1]);
+
 InstallGlobalFunction( IdentifyGroupGenerators, function( gens )
   
   local d, x,y,z, t, u, v, vec, g;
