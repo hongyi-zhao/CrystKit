@@ -6,7 +6,7 @@
 # https://mail.google.com/mail/u/0/?ogbl#search/in%3Asent+gap/QgrcJHsBqxpXbHCSnPqBGGBZRDqphmxvpZb
 InstallGlobalFunction( IdentifyGroupGenerators, function( gens )
   
-  local d, vecname, vec, g;
+  local d, vecname, vec, g, i;
 
   if not ForAll(gens, IsAffineMatrixOnLeft) then
     Error("AffineMatrixOnLeft test failed");
