@@ -519,13 +519,6 @@ InstallGlobalFunction( OrbitCrystStdByNormalizerPointGroup, function( S )
     P:=Group( One(GL(d, Integers)) );
   fi;
 
-  # 另一种方法，这样就可以对应S的所有原始生成元：
-  # # S:=SpaceGroupOnLeftIT(3,1);
-  # Sgen := GeneratorsOfGroup(S);
-  # Pgen := List( GeneratorsOfGroup(S), x -> x{[1..d]}{[1..d]} );
-  # P:= Group(Pgen);
-  # hom := GroupHomomorphismByImagesNC(S, P, Sgen, Pgen);
-
   Pgen := GeneratorsOfGroup( P );
   Sgen := List( Pgen, x -> PreImagesRepresentative( hom, x ) );
   t1:= List(Concatenation(List(Sgen, x ->x{[1..d]}[d+1])), FractionModOne);
@@ -560,7 +553,6 @@ InstallGlobalFunction( OrbitCrystStdByNormalizerPointGroup, function( S )
   orbs:=[t1];
   norms:=[I]; 
 
-  # 下面的处理方法具有统一性： 
   # catch the trivial cases
   if IsTrivial(P) or IsEmpty(NPgen) then
     res := rec( 
@@ -596,7 +588,6 @@ InstallGlobalFunction( OrbitCrystStdByNormalizerPointGroup, function( S )
     # Size(orbs) 和 CRT 约束的最高有限阶之间并没有固定的关系。
     # 使用本算法对 4 维空间群进行的测试，印证了上述结论。
 
-    # 下面的退出条件应该足够宽松，以保证能够找出所有轨道：
     # convergence criteria and thresholds
     conv := [Size(orbs), Size(sch), Size(nelm)];
     threshold := maxord * Size(NPgen);
