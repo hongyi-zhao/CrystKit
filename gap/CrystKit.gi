@@ -482,7 +482,7 @@ InstallGlobalFunction( OrbitCrystStdByNormalizerPointGroup, function( S )
         orb, orbs, norms, nelm, cnt, sch, conv, threshold, maxord, 
         ord, n, N, NSgen, iso, F, Fgen, res, g, i, j;
 
-  # Call the PackageName variable from with the corresponding package.        
+  # Call the PackageName variable from within the corresponding package.        
   # https://mail.google.com/mail/u/0/?ogbl#sent/KtbxLxGcCbLxdbmDRqglCFpbRFhGQNpKLq
   if not IsStandardAffineCrystGroup( S ) then
     Error("only work with StandardAffineCrystGroup");
@@ -816,7 +816,7 @@ end );
 # https://lbfm-rwth.github.io/carat/doc/introduction.html#examples
 InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
 
-    local d, P1, P2, ls1, ls2, S1tr, S2tr,
+    local d, P1, P2, S1tr, S2tr,
           S1s, S2s, S3s, 
           P1s, P2s, S3sgen, t3s, t, sol, pos,
           c1, C1, c2, C2,  c3, C3, C4, C,
@@ -849,20 +849,11 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
     P1 := PointGroup( S1 );
     P2 := PointGroup( S2 );
 
-    # some short cuts
-    if Size( P1 ) <> Size( P2 ) then
-        return fail;
+    # If the point groups of S1 and S2 are not isomorphic, then S1 and S2 belong to different space group types in different Q-classes.
+    if Size( P1 ) <> Size( P2 ) or fail = IsomorphismGroups(P1,P2) then
+      return fail;
     fi;
-    ls1 := AsSortedList( List( ConjugacyClasses( P1 ),
-             x -> [ Size(x), TraceMat( Representative(x) ),
-                    DeterminantMat( Representative(x) ) ] ) );
-    ls2 := AsSortedList( List( ConjugacyClasses( P2 ),
-             x -> [ Size(x), TraceMat( Representative(x) ),
-                    DeterminantMat( Representative(x) ) ] ) );
-    if ls1 <> ls2 then
-        return fail;
-    fi;
-
+ 
     # go to standard representation
     # 此处采用我的记号，
     # S1^C1 = S1s
@@ -880,6 +871,7 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
     C2    := AugmentedMatrixOnLeft( c2, 0*[1..d] );
 
     # P1s^c3 = P2s; 
+    # Check whether S1 and S2 belong to the same Z-class:
     c3  := RepresentativeAction( GL(d,Integers), P1s, P2s );
     if c3 = fail then
         return fail;
@@ -910,6 +902,8 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
     # 验证结果的正确性：
     # S1^(C^-1) = S2;
     # AffineCrystGroupOnLeft(OnTuples( GeneratorsOfGroup(S1), C ))=S2;
+
+    # Check whether S1 and S2 belong to the same space group type:
     for t in orb do
       #  Using fr package:
       # sol := SolutionMatMod1( TransposedMat(M), t - t1 );
@@ -929,9 +923,9 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
       fi;
     od;
 
-    # The incorrect logic implemented in the ConjugatorSpaceGroupsStdSamePG and ConjugatorSpaceGroups.
-    # https://github.com/gap-packages/cryst/issues/38
-    # return fail;
+    # If we have arrived here, it means that S1 and S2 must belong to different space group types.
+    # https://github.com/gap-packages/cryst/issues/38#issuecomment-1498458435
+    return fail;
 
 end );
 
