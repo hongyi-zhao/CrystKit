@@ -849,7 +849,7 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
     P1 := PointGroup( S1 );
     P2 := PointGroup( S2 );
 
-    # If the point groups of S1 and S2 are not isomorphic, then S1 and S2 belong to different space group types in different Q-classes.
+    # If the point groups of S1 and S2 are not isomorphic, then S1 and S2 belong to different Q-classes.
     if Size( P1 ) <> Size( P2 ) or fail = IsomorphismGroups(P1,P2) then
       return fail;
     fi;
