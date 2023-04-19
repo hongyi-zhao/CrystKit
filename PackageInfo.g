@@ -66,7 +66,12 @@ PackageDoc := rec(
 Dependencies := rec(
   GAP := ">= 4.11",
   NeededOtherPackages := [ ],
-  SuggestedOtherPackages := [ ],
+  # 76.11 Package Dependencies (Requesting one GAP Package from within Another)
+  # https://docs.gap-system.org/doc/ref/chap76.html#X7928799186F9B2FE
+  # [GAP Forum] Needed vs. suggested packages
+  # https://mail.google.com/mail/u/0/?ogbl#inbox/FMfcgzGsmDrQkbKDFWndHDTZkxXRwMxB
+  SuggestedOtherPackages := [ [ "RepnDecomp", ">= 1.3.0" ],
+                              [ "NumericalSgps", ">= 1.3.1" ] ],
   ExternalConditions := [ ],
 ),
 
