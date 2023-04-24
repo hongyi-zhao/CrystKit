@@ -514,6 +514,12 @@ InstallGlobalFunction( OrbitCrystStdByNormalizerPointGroup, function( S )
   # 它们之间的变换必为 IdentityMat(d + 1)。
   # About the result of IsSpaceGroup on some edge cases.
   # https://github.com/gap-packages/cryst/issues/35
+
+  # Why does GeneratorsOfGroup(PointGroup(SpaceGroupIT(3, 1))); return an empty list?
+  # https://github.com/gap-packages/cryst/issues/23#issuecomment-844364463
+  # If G = ⟨S⟩, then we say that S generates G, and the elements in S are called generators or group generators. If S is the empty set, then ⟨S⟩ is the trivial group {e}, since we consider the empty product to be the identity.
+  # https://en.wikipedia.org/wiki/Generating_set_of_a_group
+
   if IsTrivial(P) then
     # P:=Group(IdentityMat(d));
     P:=Group( One(GL(d, Integers)) );
