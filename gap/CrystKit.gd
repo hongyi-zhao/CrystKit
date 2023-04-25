@@ -23,8 +23,8 @@ DeclareGlobalFunction( "CaratQ_catalog" );
 
 DeclareGlobalFunction( "PhipnInverse" );
 DeclareGlobalFunction( "NewFiniteOrdersOfGLNZ" );
-DeclareGlobalFunction( "OrbitCrystStdByNormalizerPointGroup" );
-DeclareGlobalFunction( "OrbitCrystStdByCollectEquivExtensions" );
+DeclareGlobalFunction( "OrbitSpaceGroupStdByNormalizerPointGroup" );
+DeclareGlobalFunction( "OrbitSpaceGroupStdByCollectEquivExtensions" );
 
 DeclareGlobalFunction( "AffineIsomorphismSpaceGroups" );
 DeclareGlobalFunction( "IdentifySpaceGroup" );

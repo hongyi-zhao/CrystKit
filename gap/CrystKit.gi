@@ -477,227 +477,349 @@ end );
 # https://github.com/gap-packages/cryst/pull/33#issuecomment-1427933014
 # https://github.com/gap-packages/cryst/commit/e761436db386107f3c0b60a927bbc352b3220d58
 # LoadPackage("fr");
-InstallGlobalFunction( OrbitCrystStdByNormalizerPointGroup, function( S )
-  local P, d, Pgen, Sgen, NPgen, NP, I, M, hom, t, t1, t2, sol,
-        orb, orbs, norms, nelm, cnt, sch, conv, threshold, maxord, 
-        ord, n, N, NSgen, iso, F, Fgen, res, g, i, j;
+# InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S )
+#   local P, d, Pgen, Sgen, NPgen, NP, I, M, hom, t, t1, t2, sol,
+#         orb, orbs, norms, nelm, cnt, sch, conv, threshold, maxord, 
+#         ord, n, N, NSgen, iso, F, Fgen, res, g, i, j;
 
-  # Call the PackageName variable from within the corresponding package.        
-  # https://mail.google.com/mail/u/0/?ogbl#sent/KtbxLxGcCbLxdbmDRqglCFpbRFhGQNpKLq
+#   # Call the PackageName variable from within the corresponding package.        
+#   # https://mail.google.com/mail/u/0/?ogbl#sent/KtbxLxGcCbLxdbmDRqglCFpbRFhGQNpKLq
+#   if not IsStandardAffineCrystGroup( S ) then
+#     Error("only work with StandardAffineCrystGroup");
+#   fi;
+
+#   if IsAffineCrystGroupOnRight( S ) then
+#     S := TransposedMatrixGroup( S );
+#     res := OrbitSpaceGroupStdByNormalizerPointGroup( S );
+#     res.M := TransposedMat( res.M );
+#     res.norms := List(res.norms, TransposedMat);
+#     return res;          
+#   fi;
+
+#   d := DimensionOfMatrixGroup(S) - 1;
+#   I := IdentityMat(d);
+
+#   # 基于 cryst 包提供的一些函数：
+#   hom := PointHomomorphism(S);
+#   P:= PointGroup( S );
+
+#   # Why can't there be something like `TrivialGroup( IsMatrixGroup )` in GAP?
+#   # https://mail.google.com/mail/u/0/?ogbl#sent/KtbxLrjNdcnZznrRkHcNjCnCsKqBGBMczg
+#   # TrivialGroup( IsMatrixGroup ); 
+
+#   # 这里的处理，也解决了下面的问题：
+#   # Catch the case of a trivial point group in ConjugatorSpaceGroups 
+#   # https://github.com/gap-packages/cryst/commit/51f53da7de4f1e697d5dc7fa1fc687c1e2e43b23
+#   # 如果两个标准表示的SG 的点群都为 IsTrivial, 则因为格基都为： IdentityMat(d)，
+#   # 它们之间的变换必为 IdentityMat(d + 1)。
+#   # About the result of IsSpaceGroup on some edge cases.
+#   # https://github.com/gap-packages/cryst/issues/35
+
+#   # Why does GeneratorsOfGroup(PointGroup(SpaceGroupIT(3, 1))); return an empty list?
+#   # https://github.com/gap-packages/cryst/issues/23#issuecomment-844364463
+#   # If G = ⟨S⟩, then we say that S generates G, and the elements in S are called generators or group generators. If S is the empty set, then ⟨S⟩ is the trivial group {e}, since we consider the empty product to be the identity.
+#   # https://en.wikipedia.org/wiki/Generating_set_of_a_group
+
+#   if IsTrivial(P) then
+#     # P:=Group(IdentityMat(d));
+#     P:=Group( One(GL(d, Integers)) );
+#   fi;
+
+#   Pgen := GeneratorsOfGroup( P );
+#   Sgen := List( Pgen, x -> PreImagesRepresentative( hom, x ) );
+#   t1:= List(Concatenation(List(Sgen, x ->x{[1..d]}[d+1])), FractionModOne);
+  
+#   # In trivial case, sol is always 0 * [1..d]:
+#   # b:=RandomInvertibleMat(Size(t1))[1];
+#   # # or
+#   # b:=RandomUnimodularMat(Size(t1):domain:=[-1000..1000])[1];
+#   # # M * sol = b  (mod Z)
+#   # sol:=SolveInhomEquationsModZ(M, b, false)[1];
+
+  
+#   # 基于 MappedWord 方法(效率也差不多)：
+#   # Sgen := Filtered( Sgen, x -> not IsOne( x{[1..d]}{[1..d]} ) );
+#   # Pgen := List( Sgen, x -> x{[1..d]}{[1..d]} );
+#   # t1:= List(Concatenation(List(Sgen, x ->x{[1..d]}[d+1])), FractionModOne);
+
+#   # P:= Group(Pgen, IdentityMat(d) );
+#   # iso:=IsomorphismFpGroupByGeneratorsNC(P, Pgen); 
+#   # F := Image(iso);
+#   # Fgen := FreeGeneratorsOfFpGroup(F);
+#   # # or
+#   # # Fgen := GeneratorsOfGroup( FreeGroupOfFpGroup( F ) );
+#   # # 用法：
+#   # # List(List( Pgen, g -> g^-1 ), x -> UnderlyingElement(x^iso));
+#   # # List(last, x -> MappedWord(x, Fgen, Sgen)); 
+
+#   M:= Concatenation( List( Pgen, g -> g - I ) );
+  
+#   NPgen:=Filtered(GeneratorsOfGroup( Normalizer( GL(d, Integers), P ) ), x -> not x in P);
+
+#   orbs:=[t1];
+#   norms:=[I]; 
+
+#   # catch the trivial cases
+#   if IsTrivial(P) or IsEmpty(NPgen) then
+#     res := rec( 
+#                 orbs  := orbs,
+#                 norms  := norms,
+#                 M     := M 
+#               );
+#     return res;
+#   fi; 
+   
+#   NP:=Group(NPgen);
+
+#   # 因为要保序，以便for枚举，故不使用Set进行处理：
+#   # PG Normalizer elements used for enumeration so far:
+#   nelm:=[I];
+#   cnt := 0;
+#   sch := []; # The valid searched subset of nelm.
+
+#   if IsOddInt(d) then 
+#     maxord := Maximum(NewFiniteOrdersOfGLNZ(d+1));
+#   else 
+#     maxord := Maximum(NewFiniteOrdersOfGLNZ(d));
+#   fi; 
+
+#   for i in nelm do
+
+#     # 1. cnt 的数值可以用来适当控制外层循环的次数：根据当前观察到的 conv 在内层循环
+#     # 后不再变化的次数的阈值，来决定是否退出外层循环。
+#     # 2. 若整个群已经枚举完成，则满足 Size(nelm) = Order(NP)。
+#     # 3. 需要注意的是：这里的 orbs 可能是由不同的 norm 共轭SG 得到的，但是 CRT 中的 order
+#     # 则对应于用此处的同一个 norm / conjuator 去连续变换表示（change-of-basis，变换格基）情况下的共轭结果平移部分的变化周期的长度的约束。 
+#     # 因此， 在不是由同一个 norm / conjuator 去连续变换表示而产生全部 orbs 的情况下，
+#     # Size(orbs) 和 CRT 约束的最高有限阶之间并没有固定的关系。
+#     # 使用本算法对 4 维空间群进行的测试，印证了上述结论。
+
+#     # convergence criteria and thresholds
+#     conv := [Size(orbs), Size(sch), Size(nelm)];
+#     threshold := maxord * Size(NPgen);
+
+#     # Print( cnt," ", threshold, " ", maxord," ", Size(NPgen), " ", Size(nelm) ," ",Size(orbs)," ", Size(sch),"\n");
+
+#     # Order(NP) = Size(nelm) is equivalent to:
+#     # Order(NP) <> infinity and Order(NP) = Size(nelm)
+#     # The following condition is more expensive:
+#     # if Order(NP) = Size(nelm) or (Order(NP) = infinity and cnt >= threshold)  then 
+#     # The following condition is sufficient for obtaining a complete orbit
+#     if cnt >= threshold or Order(NP) = Size(nelm)  then 
+#       res := rec( 
+#                   orbs  := orbs,
+#                   norms  := norms,
+#                   M     := M 
+#                 );
+#       return res;
+#       # break;
+#     fi;
+
+#     for j in NPgen do
+#       g := i * j;
+
+#       if not IsOne(g) and not g in nelm then
+#         Add(nelm,g);
+        
+#         # t2:=List(Concatenation( List( List( OnTuples(Pgen, g^-1), x -> PreImagesRepresentative( hom, x )^AugmentedMatrixOnLeft(g, 0*[1..d]) ), x -> x{[1..d]}[d+1] ) ), FractionModOne); 
+        
+#         # Use MappedWord method:
+#         # t1:=List(Concatenation( List(
+#         # List( List( OnTuples(Pgen, g^-1), x -> UnderlyingElement( x ^ iso) ), x ->  MappedWord(x, Fgen, Sgen)^AugmentedMatrixOnLeft(g, 0*[1..d]) ), x -> x{[1..d]}[d+1] ) ), FractionModOne);
+
+#         # 我所采用的形式对应如下关系： S1 ^ conj = S2  
+#         # sol:= SolveInhomEquationsModZ( M, t2-t1, false)[1];
+
+#         # 共轭作用对应的表示惯例： 
+#         # {R, t1}^{E,x} = {R, t2}
+#         # (R-I) x + t1 = t2 
+#         # M x + t1 =t2 
+#         # M x = t2 -t1 
+
+#         ord:=1;
+#         orb:=[];
+#         while true do 
+      
+#           n := g^ord; 
+
+#           # In case g has finite order
+#           if IsOne(n) then break; fi;
+
+#           # 另：t2的求法，参考下面相关部分的注释，
+#           # 在写文章时，可以作为相关理论的详细描述。
+#           # 道理上都是相同或类似的。只是在描述和步骤上有些差别而已。
+#           # devCollectEquivExtensions
+#           # dev1CollectEquivExtensions
+           
+#           # In case g has infinite order, based on the following theorems:
+#           # https://en.wikipedia.org/wiki/Crystallographic_restriction_theorem
+#           # Bieberbach's Theorem II
+#           # https://en.wikipedia.org/wiki/Space_group#Bieberbach's_theorems
+
+#           # The following algorithm is derived:
+#           ord := ord + 1;  
+#           N := AugmentedMatrixOnLeft(n, 0*[1..d]);
+#           NSgen:= List( OnTuples(Pgen, n^-1), x -> PreImagesRepresentative( hom, x )^N );
+          
+#           # Use MappedWord method:
+#           # NSgen:= List( List( OnTuples(Pgen, n^-1), x -> UnderlyingElement( x ^ iso) ), x ->  MappedWord(x, Fgen, Sgen)^N );
+#           t2:=List(Concatenation(List(NSgen, x ->x{[1..d]}[d+1])), FractionModOne);
+#           if not IsEmpty(orb) and t2 = First(orb) then break; fi;
+          
+#           Add(orb,t2);
+          
+#           # 一个非纯平移 conjugator 的幂可能等价于一个纯平移 conjugator；
+#           # 在 update orbs 列表前，进一步排除此可能。
+#           # 有点类似于 Gram–Schmidt process 过程中的处理。
+
+#           # t1 和 t2 所对应的SG之间可以通过纯平移共轭同构，其中包括了它们相等的情况（有平凡（零）解）。
+#           # 因此单独使用 ForAll 也是可以的，但是基于第一个条件可以提高效率，避免不必要的计算：
+#           if not t2 in orbs and ForAll(List(orbs, t -> SolveInhomEquationsModZ( M, t2-t, false)[1] ), IsEmpty) then
+#           # or using fr package
+#           # if not t2 in orbs and ForAll(List(orbs, t -> SolutionMatMod1(TransposedMat(M), t2-t) ), x -> x = fail) then
+
+#             Add(norms, n);
+#             Add(orbs, t2);
+#             AddSet(sch, g);
+#           fi;
+
+#         od; 
+#       fi;
+#     od;
+
+#     if conv{[1,2]} = [Size(orbs), Size(sch)] and conv[3] < Size(nelm) then
+#       cnt := cnt + 1;
+#     fi;
+
+#   od;
+
+# end );
+
+
+InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S )
+
+  local P, d, P_gen, S_gen, t_gen, norm, M, hom, 
+        orb, rep, itau, itau_orb, itau_rep, 
+        new_itau, new_rep, Snew_gen, len, img, n, o, 
+        res, g, x, i, j;
+
   if not IsStandardAffineCrystGroup( S ) then
     Error("only work with StandardAffineCrystGroup");
   fi;
 
   if IsAffineCrystGroupOnRight( S ) then
     S := TransposedMatrixGroup( S );
-    res := OrbitCrystStdByNormalizerPointGroup( S );
+    res := OrbitSpaceGroupStdByNormalizerPointGroup( S );
     res.M := TransposedMat( res.M );
-    res.norms := List(res.norms, TransposedMat);
-    return res;          
+    res.rep := List(res.rep, TransposedMat);
+    return res;
   fi;
 
-  d := DimensionOfMatrixGroup(S) - 1;
-  I := IdentityMat(d);
 
-  # 基于 cryst 包提供的一些函数：
   hom := PointHomomorphism(S);
-  P:= PointGroup( S );
-
-  # Why can't there be something like `TrivialGroup( IsMatrixGroup )` in GAP?
-  # https://mail.google.com/mail/u/0/?ogbl#sent/KtbxLrjNdcnZznrRkHcNjCnCsKqBGBMczg
-  # TrivialGroup( IsMatrixGroup ); 
-
-  # 这里的处理，也解决了下面的问题：
-  # Catch the case of a trivial point group in ConjugatorSpaceGroups 
-  # https://github.com/gap-packages/cryst/commit/51f53da7de4f1e697d5dc7fa1fc687c1e2e43b23
-  # 如果两个标准表示的SG 的点群都为 IsTrivial, 则因为格基都为： IdentityMat(d)，
-  # 它们之间的变换必为 IdentityMat(d + 1)。
-  # About the result of IsSpaceGroup on some edge cases.
-  # https://github.com/gap-packages/cryst/issues/35
-
-  # Why does GeneratorsOfGroup(PointGroup(SpaceGroupIT(3, 1))); return an empty list?
-  # https://github.com/gap-packages/cryst/issues/23#issuecomment-844364463
-  # If G = ⟨S⟩, then we say that S generates G, and the elements in S are called generators or group generators. If S is the empty set, then ⟨S⟩ is the trivial group {e}, since we consider the empty product to be the identity.
-  # https://en.wikipedia.org/wiki/Generating_set_of_a_group
+  d := DimensionOfMatrixGroup(S) - 1;
+  P := PointGroup(S);
 
   if IsTrivial(P) then
     # P:=Group(IdentityMat(d));
     P:=Group( One(GL(d, Integers)) );
   fi;
 
-  Pgen := GeneratorsOfGroup( P );
-  Sgen := List( Pgen, x -> PreImagesRepresentative( hom, x ) );
-  t1:= List(Concatenation(List(Sgen, x ->x{[1..d]}[d+1])), FractionModOne);
-  
-  # In trivial case, sol is always 0 * [1..d]:
-  # b:=RandomInvertibleMat(Size(t1))[1];
-  # # or
-  # b:=RandomUnimodularMat(Size(t1):domain:=[-1000..1000])[1];
-  # # M * sol = b  (mod Z)
-  # sol:=SolveInhomEquationsModZ(M, b, false)[1];
 
-  
-  # 基于 MappedWord 方法(效率也差不多)：
-  # Sgen := Filtered( Sgen, x -> not IsOne( x{[1..d]}{[1..d]} ) );
-  # Pgen := List( Sgen, x -> x{[1..d]}{[1..d]} );
-  # t1:= List(Concatenation(List(Sgen, x ->x{[1..d]}[d+1])), FractionModOne);
+  P_gen := GeneratorsOfGroup(P);
+  S_gen := List(P_gen, x -> PreImagesRepresentative(hom, x));
+  S_gen := List(S_gen, x -> AugmentedMatrixOnLeft(x{[1..d]}{[1..d]}, List(x{[1..d]}[d+1], FractionModOne)));
 
-  # P:= Group(Pgen, IdentityMat(d) );
-  # iso:=IsomorphismFpGroupByGeneratorsNC(P, Pgen); 
-  # F := Image(iso);
-  # Fgen := FreeGeneratorsOfFpGroup(F);
-  # # or
-  # # Fgen := GeneratorsOfGroup( FreeGroupOfFpGroup( F ) );
-  # # 用法：
-  # # List(List( Pgen, g -> g^-1 ), x -> UnderlyingElement(x^iso));
-  # # List(last, x -> MappedWord(x, Fgen, Sgen)); 
+  M:= Concatenation( List( P_gen, g -> g - IdentityMat(d) ) );
+  # For debug:
+  # t_gen := List(IdentityMat(d), x -> AugmentedMatrixOnLeft(IdentityMat(d), x));
 
-  M:= Concatenation( List( Pgen, g -> g - I ) );
-  
-  NPgen:=Filtered(GeneratorsOfGroup( Normalizer( GL(d, Integers), P ) ), x -> not x in P);
+  norm := GeneratorsOfGroup(Normalizer(GL(d, Integers), P));
+  norm := List(Filtered(norm, x -> not x in P), y -> AugmentedMatrixOnLeft(y, 0*[1..d]));
 
-  orbs:=[t1];
-  norms:=[I]; 
+  # SymmorphicSpaceGroup 的定义：
+
+  # Algorithms for Crystallographic Groups
+  # BETTINA EICK,1 BERND SOUVIGNIER2
+  # page 318
+  # 7. Deﬁnition.
+  # 2. Space groups containing a subgroup isomorphic to their full point group are called symmorphic space groups. This is the case if and
+  # only if the image of \tau lies in Z^n.
+
+  itau:=List(Concatenation(List( S_gen, x -> x{[1..d]}[d+1] )), FractionModOne); 
+
+  orb := [S_gen];
+  rep := [One(S)];
+  itau_orb:=[itau];
+  itau_rep:=[One(S)];
 
   # catch the trivial cases
-  if IsTrivial(P) or IsEmpty(NPgen) then
+  # 对于 SymmorphicSpaceGroup，直接返回结果即可。
+  if IsTrivial(P) or IsEmpty(norm) or ForAll( itau, IsZero ) then
     res := rec( 
-                orbs  := orbs,
-                norms  := norms,
+                orb  := itau_orb,
+                rep  := itau_rep,
                 M     := M 
               );
     return res;
   fi; 
-   
-  NP:=Group(NPgen);
 
-  # 因为要保序，以便for枚举，故不使用Set进行处理：
-  # PG Normalizer elements used for enumeration so far:
-  nelm:=[I];
-  cnt := 0;
-  sch := []; # The valid searched subset of nelm.
+  # 因为 norm 是作用在点群上的，所以必须首先枚举完
+  # norm 作用下的 P_gen 的所有可能变化，
+  # 然后，再进一步处理。
+  repeat
+    len := Size(orb);
+    for n in norm do
+      for o in orb do
+        img := OnTuples(o, n);
+        img := List(img, x -> AugmentedMatrixOnLeft(x{[1..d]}{[1..d]}, List(x{[1..d]}[d+1], FractionModOne)));
 
-  if IsOddInt(d) then 
-    maxord := Maximum(NewFiniteOrdersOfGLNZ(d+1));
-  else 
-    maxord := Maximum(NewFiniteOrdersOfGLNZ(d));
-  fi; 
+        if not img in orb then
+          new_rep := rep[Position(orb, o)] * n;
+          Add(orb, img);
+          Add(rep, new_rep);
 
-  for i in nelm do
-
-    # 1. cnt 的数值可以用来适当控制外层循环的次数：根据当前观察到的 conv 在内层循环
-    # 后不再变化的次数的阈值，来决定是否退出外层循环。
-    # 2. 若整个群已经枚举完成，则满足 Size(nelm) = Order(NP)。
-    # 3. 需要注意的是：这里的 orbs 可能是由不同的 norm 共轭SG 得到的，但是 CRT 中的 order
-    # 则对应于用此处的同一个 norm / conjuator 去连续变换表示（change-of-basis，变换格基）情况下的共轭结果平移部分的变化周期的长度的约束。 
-    # 因此， 在不是由同一个 norm / conjuator 去连续变换表示而产生全部 orbs 的情况下，
-    # Size(orbs) 和 CRT 约束的最高有限阶之间并没有固定的关系。
-    # 使用本算法对 4 维空间群进行的测试，印证了上述结论。
-
-    # convergence criteria and thresholds
-    conv := [Size(orbs), Size(sch), Size(nelm)];
-    threshold := maxord * Size(NPgen);
-
-    # Print( cnt," ", threshold, " ", maxord," ", Size(NPgen), " ", Size(nelm) ," ",Size(orbs)," ", Size(sch),"\n");
-
-    # Order(NP) = Size(nelm) is equivalent to:
-    # Order(NP) <> infinity and Order(NP) = Size(nelm)
-    # The following condition is more expensive:
-    # if Order(NP) = Size(nelm) or (Order(NP) = infinity and cnt >= threshold)  then 
-    # The following condition is sufficient for obtaining a complete orbit
-    if cnt >= threshold or Order(NP) = Size(nelm)  then 
-      res := rec( 
-                  orbs  := orbs,
-                  norms  := norms,
-                  M     := M 
-                );
-      return res;
-      # break;
-    fi;
-
-    for j in NPgen do
-      g := i * j;
-
-      if not IsOne(g) and not g in nelm then
-        Add(nelm,g);
-        
-        # t2:=List(Concatenation( List( List( OnTuples(Pgen, g^-1), x -> PreImagesRepresentative( hom, x )^AugmentedMatrixOnLeft(g, 0*[1..d]) ), x -> x{[1..d]}[d+1] ) ), FractionModOne); 
-        
-        # Use MappedWord method:
-        # t1:=List(Concatenation( List(
-        # List( List( OnTuples(Pgen, g^-1), x -> UnderlyingElement( x ^ iso) ), x ->  MappedWord(x, Fgen, Sgen)^AugmentedMatrixOnLeft(g, 0*[1..d]) ), x -> x{[1..d]}[d+1] ) ), FractionModOne);
-
-        # 我所采用的形式对应如下关系： S1 ^ conj = S2  
-        # sol:= SolveInhomEquationsModZ( M, t2-t1, false)[1];
-
-        # 共轭作用对应的表示惯例： 
-        # {R, t1}^{E,x} = {R, t2}
-        # (R-I) x + t1 = t2 
-        # M x + t1 =t2 
-        # M x = t2 -t1 
-
-        ord:=1;
-        orb:=[];
-        while true do 
-      
-          n := g^ord; 
-
-          # In case g has finite order
-          if IsOne(n) then break; fi;
-
-          # 另：t2的求法，参考下面相关部分的注释，
-          # 在写文章时，可以作为相关理论的详细描述。
-          # 道理上都是相同或类似的。只是在描述和步骤上有些差别而已。
-          # devCollectEquivExtensions
-          # dev1CollectEquivExtensions
-           
-          # In case g has infinite order, based on the following theorems:
-          # https://en.wikipedia.org/wiki/Crystallographic_restriction_theorem
-          # Bieberbach's Theorem II
-          # https://en.wikipedia.org/wiki/Space_group#Bieberbach's_theorems
-
-          # The following algorithm is derived:
-          ord := ord + 1;  
-          N := AugmentedMatrixOnLeft(n, 0*[1..d]);
-          NSgen:= List( OnTuples(Pgen, n^-1), x -> PreImagesRepresentative( hom, x )^N );
+          # Debug the logic used here:
+          # S1:=AffineCrystGroupOnLeft(Concatenation(img, t_gen));
+          # 对点群部分生成元用 new_rep{[1..dim]}{[1..dim]}^-1 作用，
+          # 此时，必然点群不变，然后再经过 hom 去S中找出对应的 Sgen，
+          # 这样实际上，必然仍生成 S，
+          # 由此，进一步得到维持和原Sgen的点群部分对应的 S2_gen的方法，
+          # 同时使得 S1 = S2。
+          # 这样，就实现了保持点群部分全同的轨道表示。
+          # S2_gen:=List(P_gen, x -> PreImagesRepresentative(hom, x ^ (new_rep{[1..dim]}{[1..dim]}^-1) ) ^ new_rep );
+          # or
+          Snew_gen:=List( OnTuples(P_gen, new_rep{[1..d]}{[1..d]}^-1), x -> PreImagesRepresentative( hom, x ) ^ new_rep );
           
-          # Use MappedWord method:
-          # NSgen:= List( List( OnTuples(Pgen, n^-1), x -> UnderlyingElement( x ^ iso) ), x ->  MappedWord(x, Fgen, Sgen)^N );
-          t2:=List(Concatenation(List(NSgen, x ->x{[1..d]}[d+1])), FractionModOne);
-          if not IsEmpty(orb) and t2 = First(orb) then break; fi;
+          # Snew:=AffineCrystGroupOnLeft( Concatenation( Snew_gen, t_gen) );
+          # Print( S^(new_rep^-1) = S1, " ", S1 = Snew, "\n" );
+              
+          new_itau:=List(Concatenation(List( Snew_gen, x -> x{[1..d]}[d+1] )), FractionModOne); 
           
-          Add(orb,t2);
-          
-          # 一个非纯平移 conjugator 的幂可能等价于一个纯平移 conjugator；
-          # 在 update orbs 列表前，进一步排除此可能。
-          # 有点类似于 Gram–Schmidt process 过程中的处理。
-
           # t1 和 t2 所对应的SG之间可以通过纯平移共轭同构，其中包括了它们相等的情况（有平凡（零）解）。
           # 因此单独使用 ForAll 也是可以的，但是基于第一个条件可以提高效率，避免不必要的计算：
-          if not t2 in orbs and ForAll(List(orbs, t -> SolveInhomEquationsModZ( M, t2-t, false)[1] ), IsEmpty) then
-          # or using fr package
-          # if not t2 in orbs and ForAll(List(orbs, t -> SolutionMatMod1(TransposedMat(M), t2-t) ), x -> x = fail) then
-
-            Add(norms, n);
-            Add(orbs, t2);
-            AddSet(sch, g);
+          if not new_itau in new_itau and ForAll(List(itau_orb, x -> SolveInhomEquationsModZ( M, new_itau - x, false)[1] ), IsEmpty) then
+            Add( itau_orb, new_itau );
+            Add( itau_rep, new_rep );
           fi;
-
-        od; 
-      fi;
+        fi;
+      od;
     od;
 
-    if conv{[1,2]} = [Size(orbs), Size(sch)] and conv[3] < Size(nelm) then
-      cnt := cnt + 1;
-    fi;
+  until len = Size(orb);
 
-  od;
+  res := rec( 
+              orb  := itau_orb,
+              rep  := itau_rep,
+              M     := M 
+            );
+  return res;
 
 end );
 
-# 和 OrbitCrystStdByNormalizerPointGroup 的结果进行比较：
+# 和 OrbitSpaceGroupStdByNormalizerPointGroup 的结果进行比较：
 InstallGlobalFunction(
-OrbitCrystStdByCollectEquivExtensions, function( S )
+OrbitSpaceGroupStdByCollectEquivExtensions, function( S )
   local P, d, norm, Pgen, I, 
         N, F, rels, mat, ext, oscee, orbs,
         Sgen, t, M, pos, x;
@@ -770,7 +892,7 @@ OrbitCrystStdByCollectEquivExtensions, function( S )
   # oscee := dev1CollectEquivExtensions( ext[1], ext[2], norm, PZ );
   
 
-  # osnpg:=OrbitCrystStdByNormalizerPointGroup(S);
+  # osnpg:=OrbitSpaceGroupStdByNormalizerPointGroup(S);
   # M := osnpg.M;
   # orb := osnpg.orbs;
   # norm := osnpg.norms;
@@ -900,7 +1022,7 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
     # S1s ^ C3 = S2s ^ C4 
     # S1s ^ C3 * (C4 ^ -1) = S2s = S2^C2
     # S1 ^ (C1 * C3 * C4 ^ -1 * C2 ^ -1) = S2
-    osnpg := OrbitCrystStdByNormalizerPointGroup( S2s );
+    osnpg := OrbitSpaceGroupStdByNormalizerPointGroup( S2s );
     M := osnpg.M;
     orb := osnpg.orbs;
     norm := osnpg.norms;
