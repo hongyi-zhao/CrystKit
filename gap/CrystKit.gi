@@ -755,7 +755,8 @@ InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S )
   if not ( 
           IsTrivial(P) or 
           IsEmpty(norm) or 
-          ForAll( itau, IsZero ) ) then
+          ForAll(itau, IsZero) # SymmorphicSpaceGroup
+         ) then
  
     # 因为 norm 是作用在点群上的，所以必须首先枚举完
     # norm 作用下的 P_gen 的所有可能变化，
