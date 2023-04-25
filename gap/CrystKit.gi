@@ -948,7 +948,7 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
           S1s, S2s, S3s, 
           P1s, P2s, S3sgen, t3s, t, sol, pos,
           c1, C1, c2, C2,  c3, C3, C4, C,
-          osnpg, M, orb, norm;
+          osnpg, M, orb, rep;
 
     # Affine crystallographic groups vs space groups.
     # https://github.com/gap-packages/cryst/issues/36#issuecomment-1472348928
@@ -1024,8 +1024,8 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
     # S1 ^ (C1 * C3 * C4 ^ -1 * C2 ^ -1) = S2
     osnpg := OrbitSpaceGroupStdByNormalizerPointGroup( S2s );
     M := osnpg.M;
-    orb := osnpg.orbs;
-    norm := osnpg.norms;
+    orb := osnpg.orb;
+    rep := osnpg.rep;
 
     # 验证结果的正确性：
     # S1^(C^-1) = S2;
@@ -1037,12 +1037,15 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
       # sol := SolutionMatMod1( TransposedMat(M), t - t1 );
       # if sol <> fail then
 
+      # S2s ^ C4 = S3s
+      # ( S2s ^ rep[pos]) ^ {E|sol}) = S3s
       sol := SolveInhomEquationsModZ( M, t3s - t, false )[1];
       if not IsEmpty(sol) then
         pos := Position(orb, t);
-        # S2s ^ C4 = S3s
-        # The following relationship holds for matrices acting on the left
-        C4 := AugmentedMatrixOnLeft( norm[pos], norm[pos] * sol[1] );
+        # so we have
+        # C4:= rep[pos] * {E|sol} = [[ rep[pos], 0 ], [ 0, 1 ]] * [[E, sol], [0,1]]
+        # which is equivalent to the following:
+        C4 := AugmentedMatrixOnLeft( rep[pos], rep[pos] * sol[1] );
         C := C1 * C3 * C4 ^ -1 * C2 ^ -1;
         # Catch the case of a trivial point group in ConjugatorSpaceGroups 
         # https://github.com/gap-packages/cryst/commit/51f53da7de4f1e697d5dc7fa1fc687c1e2e43b23
