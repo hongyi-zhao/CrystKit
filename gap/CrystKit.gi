@@ -715,7 +715,6 @@ InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S )
     return res;
   fi;
 
-
   hom := PointHomomorphism(S);
   d := DimensionOfMatrixGroup(S) - 1;
   P := PointGroup(S);
@@ -724,7 +723,6 @@ InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S )
     # P:=Group(IdentityMat(d));
     P:=Group( One(GL(d, Integers)) );
   fi;
-
 
   P_gen := GeneratorsOfGroup(P);
   S_gen := List(P_gen, x -> PreImagesRepresentative(hom, x));
@@ -742,9 +740,8 @@ InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S )
   # Algorithms for Crystallographic Groups
   # BETTINA EICK,1 BERND SOUVIGNIER2
   # page 318
-  # 7. Deﬁnition.
-  # 2. Space groups containing a subgroup isomorphic to their full point group are called symmorphic space groups. This is the case if and
-  # only if the image of \tau lies in Z^n.
+  # 7. Definition.
+  # 2. Space groups containing a subgroup isomorphic to their full point group are called symmorphic space groups. This is the case if and only if the image of \tau lies in Z^n.
 
   itau:=List(Concatenation(List( S_gen, x -> x{[1..d]}[d+1] )), FractionModOne); 
 
@@ -753,60 +750,57 @@ InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S )
   itau_orb:=[itau];
   itau_rep:=[One(S)];
 
-  # catch the trivial cases
-  # 对于 SymmorphicSpaceGroup，直接返回结果即可。
-  if IsTrivial(P) or IsEmpty(norm) or ForAll( itau, IsZero ) then
-    res := rec( 
-                orb  := itau_orb,
-                rep  := itau_rep,
-                M     := M 
-              );
-    return res;
-  fi; 
+  # catch the trivial cases and 
+  # SymmorphicSpaceGroup，直接返回结果即可。
+  if not ( 
+          IsTrivial(P) or 
+          IsEmpty(norm) or 
+          ForAll( itau, IsZero ) ) then
+ 
+    # 因为 norm 是作用在点群上的，所以必须首先枚举完
+    # norm 作用下的 P_gen 的所有可能变化，
+    # 然后，再进一步处理。
+    repeat
+      len := Size(orb);
+      for n in norm do
+        for o in orb do
+          img := OnTuples(o, n);
+          img := List(img, x -> AugmentedMatrixOnLeft(x{[1..d]}{[1..d]}, List(x{[1..d]}[d+1], FractionModOne)));
 
-  # 因为 norm 是作用在点群上的，所以必须首先枚举完
-  # norm 作用下的 P_gen 的所有可能变化，
-  # 然后，再进一步处理。
-  repeat
-    len := Size(orb);
-    for n in norm do
-      for o in orb do
-        img := OnTuples(o, n);
-        img := List(img, x -> AugmentedMatrixOnLeft(x{[1..d]}{[1..d]}, List(x{[1..d]}[d+1], FractionModOne)));
+          if not img in orb then
+            new_rep := rep[Position(orb, o)] * n;
+            Add(orb, img);
+            Add(rep, new_rep);
 
-        if not img in orb then
-          new_rep := rep[Position(orb, o)] * n;
-          Add(orb, img);
-          Add(rep, new_rep);
-
-          # Debug the logic used here:
-          # S1:=AffineCrystGroupOnLeft(Concatenation(img, t_gen));
-          # 对点群部分生成元用 new_rep{[1..dim]}{[1..dim]}^-1 作用，
-          # 此时，必然点群不变，然后再经过 hom 去S中找出对应的 Sgen，
-          # 这样实际上，必然仍生成 S，
-          # 由此，进一步得到维持和原Sgen的点群部分对应的 S2_gen的方法，
-          # 同时使得 S1 = S2。
-          # 这样，就实现了保持点群部分全同的轨道表示。
-          # S2_gen:=List(P_gen, x -> PreImagesRepresentative(hom, x ^ (new_rep{[1..dim]}{[1..dim]}^-1) ) ^ new_rep );
-          # or
-          Snew_gen:=List( OnTuples(P_gen, new_rep{[1..d]}{[1..d]}^-1), x -> PreImagesRepresentative( hom, x ) ^ new_rep );
-          
-          # Snew:=AffineCrystGroupOnLeft( Concatenation( Snew_gen, t_gen) );
-          # Print( S^(new_rep^-1) = S1, " ", S1 = Snew, "\n" );
-              
-          new_itau:=List(Concatenation(List( Snew_gen, x -> x{[1..d]}[d+1] )), FractionModOne); 
-          
-          # t1 和 t2 所对应的SG之间可以通过纯平移共轭同构，其中包括了它们相等的情况（有平凡（零）解）。
-          # 因此单独使用 ForAll 也是可以的，但是基于第一个条件可以提高效率，避免不必要的计算：
-          if not new_itau in new_itau and ForAll(List(itau_orb, x -> SolveInhomEquationsModZ( M, new_itau - x, false)[1] ), IsEmpty) then
-            Add( itau_orb, new_itau );
-            Add( itau_rep, new_rep );
+            # Simg:=AffineCrystGroupOnLeft(Concatenation(img, t_gen));
+            # 对点群部分生成元用 new_rep{[1..d]}{[1..d]}^-1 作用，
+            # 此时，必然点群不变，然后再经过 hom 在 S 中找出对应的 Sgen，
+            # 这样实际上，必然仍生成 S，
+            # 由此，进一步得到维持和原Sgen的点群部分对应的 Snew_gen 的方法，
+            # 同时使得 Simg = Snew。
+            # 这样，就实现了保持点群部分全同的轨道表示。
+            # Snew_gen:=List(P_gen, x -> PreImagesRepresentative(hom, x ^ (new_rep{[1..d]}{[1..d]}^-1) ) ^ new_rep );
+            # or
+            Snew_gen:=List( OnTuples(P_gen, new_rep{[1..d]}{[1..d]}^-1), x -> PreImagesRepresentative( hom, x ) ^ new_rep );
+            
+            # Snew:=AffineCrystGroupOnLeft( Concatenation( Snew_gen, t_gen) );
+            # Print( S^(new_rep^-1) = Simg, " ", Simg = Snew, "\n" );
+                
+            new_itau:=List(Concatenation(List( Snew_gen, x -> x{[1..d]}[d+1] )), FractionModOne); 
+            
+            # itau_orb 中的两项所对应的 SG 之间可以通过纯平移共轭同构，其中包括了它们相等的情况（零解）。
+            # 因此单独使用 ForAll 也是可以的，但是基于第一个条件可以提高效率，避免不必要的计算：
+            if not new_itau in itau_orb and ForAll(List(itau_orb, x -> SolveInhomEquationsModZ( M, new_itau - x, false)[1] ), IsEmpty) then
+              Add( itau_orb, new_itau );
+              Add( itau_rep, new_rep );
+            fi;
           fi;
-        fi;
+        od;
       od;
-    od;
 
-  until len = Size(orb);
+    until len = Size(orb);
+
+  fi;
 
   res := rec( 
               orb  := itau_orb,
