@@ -698,11 +698,13 @@ end );
 
 InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S )
 
-  local P, d, P_gen, S_gen, t_gen, norm, M, hom, 
-        orb, rep, tau, tau_orb, tau_rep, 
-        new_tau, new_rep, Snew_gen, len, img, n, o, 
-        res, g, x, i, j;
-
+  local P, d, P_gen, S_gen, norm, M, hom, 
+        orb, rep, t, tau, new_tau, new_rep, 
+        Snew_gen, len, new_orb, n, o, 
+        res, g, x, y,
+        # For debug:
+        t_gen, Simg, Snew;
+  
   if not IsStandardAffineCrystGroup( S ) then
     Error("only work with StandardAffineCrystGroup");
   fi;
@@ -729,9 +731,6 @@ InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S )
   S_gen := List(P_gen, x -> PreImagesRepresentative(hom, x));
   S_gen := List(S_gen, x -> AugmentedMatrixOnLeft(x{[1..d]}{[1..d]}, List(x{[1..d]}[d+1], FractionModOne)));
 
-  M:= Concatenation( List( P_gen, g -> g - IdentityMat(d) ) );
-  # For debug:
-  # t_gen := List(IdentityMat(d), x -> AugmentedMatrixOnLeft(IdentityMat(d), x));
 
   norm := GeneratorsOfGroup(Normalizer(GL(d, Integers), P));
   norm := List(Filtered(norm, x -> not x in P), y -> AugmentedMatrixOnLeft(y, 0*[1..d]));
@@ -741,16 +740,19 @@ InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S )
   # Algorithms for Crystallographic Groups
   # BETTINA EICK,1 BERND SOUVIGNIER2
   # page 318
-  # 7. Definition.
+  # 7. Deﬁnition.
   # 2. Space groups containing a subgroup isomorphic to their full point group are called symmorphic space groups. This is the case if and
   # only if the image of \tau lies in Z^n.
 
-  tau:=List(Concatenation(List( S_gen, x -> x{[1..d]}[d+1] )), FractionModOne); 
+  t := List(Concatenation(List( S_gen, x -> x{[1..d]}[d+1] )), FractionModOne); 
 
-  orb := [S_gen];
-  rep := [One(S)];
-  tau_orb:=[tau];
-  tau_rep:=[One(S)];
+  orb := [ S_gen ];
+  tau := [ t ];
+  rep := [ One(S) ];
+  M:= Concatenation( List( P_gen, g -> g - IdentityMat(d) ) );
+
+  # For debug:
+  # t_gen := List(IdentityMat(d), x -> AugmentedMatrixOnLeft(IdentityMat(d), x));
 
   # catch the trivial cases and 
   # SymmorphicSpaceGroup，直接返回结果即可。
@@ -768,15 +770,13 @@ InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S )
       len := Size(orb);
       for n in norm do
         for o in orb do
-          img := OnTuples(o, n);
-          img := List(img, x -> AugmentedMatrixOnLeft(x{[1..d]}{[1..d]}, List(x{[1..d]}[d+1], FractionModOne)));
+          new_orb := OnTuples(o, n);
+          new_orb := List(new_orb, x -> AugmentedMatrixOnLeft(x{[1..d]}{[1..d]}, List(x{[1..d]}[d+1], FractionModOne)));
 
-          if not img in orb then
+          if not new_orb in orb then
             new_rep := rep[Position(orb, o)] * n;
-            Add(orb, img);
-            Add(rep, new_rep);
-
-            # Simg:=AffineCrystGroupOnLeft(Concatenation(img, t_gen));
+   
+            # Simg:=AffineCrystGroupOnLeft(Concatenation(new_orb, t_gen));
             # 对点群部分生成元用 new_rep{[1..d]}{[1..d]}^-1 作用，
             # 此时，必然点群不变，然后再经过 hom 在 S 中找出对应的 Sgen，
             # 这样实际上，必然仍生成 S，
@@ -792,11 +792,12 @@ InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S )
                 
             new_tau:=List(Concatenation(List( Snew_gen, x -> x{[1..d]}[d+1] )), FractionModOne); 
             
-            # tau_orb 中的两项所对应的 SG 之间可以通过纯平移共轭同构，其中包括了它们相等的情况（零解）。
+            # tau 中的两项所对应的 SG 之间可以通过纯平移共轭同构，其中包括了它们相等的情况（零解）。
             # 因此单独使用 ForAll 也是可以的，但是基于第一个条件可以提高效率，避免不必要的计算：
-            if not new_tau in tau_orb and ForAll(List(tau_orb, x -> SolveInhomEquationsModZ( M, new_tau - x, false)[1] ), IsEmpty) then
-              Add( tau_orb, new_tau );
-              Add( tau_rep, new_rep );
+            if not new_tau in tau and ForAll(List(tau, x -> SolveInhomEquationsModZ( M, new_tau - x, false)[1] ), IsEmpty) then
+              Add(tau, new_tau);
+              Add(orb, new_orb);
+              Add(rep, new_rep);
             fi;
           fi;
         od;
@@ -807,8 +808,8 @@ InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S )
   fi;
 
   res := rec( 
-              orb  := tau_orb,
-              rep  := tau_rep,
+              tau  := tau,
+              rep  := rep,
               M     := M 
             );
 
@@ -892,9 +893,9 @@ OrbitSpaceGroupStdByCollectEquivExtensions, function( S )
   
 
   # orbnpg:=OrbitSpaceGroupStdByNormalizerPointGroup(S);
-  # M := orbnpg.M;
-  # orb := orbnpg.orb
-  # rep := orbnpg.rep;
+  # M := orbnpg.tau   896:   # orb := orbnpg.tau
+  # orb := orbnpg.tau
+  # rep := orbnpg.tau;
 
   # # 不完全相同，但是它们之间以纯平移共轭一一对应：
   # for i in Difference( orb, orbcee[2] ) do
@@ -947,7 +948,7 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
           S1s, S2s, S3s, 
           P1s, P2s, S3sgen, t3s, t, sol, pos,
           c1, C1, c2, C2,  c3, C3, C4, C,
-          orbnpg, M, orb, rep;
+          orbnpg, tau, rep, M;
 
     # Affine crystallographic groups vs space groups.
     # https://github.com/gap-packages/cryst/issues/36#issuecomment-1472348928
@@ -1022,16 +1023,16 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
     # S1s ^ C3 * (C4 ^ -1) = S2s = S2^C2
     # S1 ^ (C1 * C3 * C4 ^ -1 * C2 ^ -1) = S2
     orbnpg := OrbitSpaceGroupStdByNormalizerPointGroup( S2s );
-    M := orbnpg.M;
-    orb := orbnpg.orb;
+    tau := orbnpg.tau;
     rep := orbnpg.rep;
+    M := orbnpg.M;
 
     # 验证结果的正确性：
     # S1^(C^-1) = S2;
     # AffineCrystGroupOnLeft(OnTuples( GeneratorsOfGroup(S1), C ))=S2;
 
     # Check whether S1 and S2 belong to the same space group type:
-    for t in orb do
+    for t in tau do
       #  Using fr package:
       # sol := SolutionMatMod1( TransposedMat(M), t - t1 );
       # if sol <> fail then
@@ -1040,11 +1041,15 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
       # ( S2s ^ rep[pos]) ^ {E|sol}) = S3s
       sol := SolveInhomEquationsModZ( M, t3s - t, false )[1];
       if not IsEmpty(sol) then
-        pos := Position(orb, t);
+        pos := Position(tau, t);
         # so we have
-        # C4:= rep[pos] * {E|sol} = [[ rep[pos], 0 ], [ 0, 1 ]] * [[E, sol], [0,1]]
-        # which is equivalent to the following:
-        C4 := AugmentedMatrixOnLeft( rep[pos], rep[pos] * sol[1] );
+        # C4:= rep[pos] * {E|sol} 
+        # = [[ rep[pos]{[1..d]}{[1..d]}, (0 * [1..d]) ^ T ], [ 0* [1..d], 1 ]] *  [[IdentityMat(d), sol ^ T], [0 * [1..d],1]]
+        # = [[ rep[pos]{[1..d]}{[1..d]}, rep[pos]{[1..d]}{[1..d]} * sol ^ T], [ 0 * [1..d],1]]
+        # so, we have the following:
+        # C4 := rep[pos] * AugmentedMatrixOnLeft( IdentityMat(d), sol[1] );
+        # or
+        C4 := AugmentedMatrixOnLeft( rep[pos]{[1..d]}{[1..d]}, rep[pos]{[1..d]}{[1..d]} * sol[1] );
         C := C1 * C3 * C4 ^ -1 * C2 ^ -1;
         # Catch the case of a trivial point group in ConjugatorSpaceGroups 
         # https://github.com/gap-packages/cryst/commit/51f53da7de4f1e697d5dc7fa1fc687c1e2e43b23
