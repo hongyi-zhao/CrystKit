@@ -699,8 +699,8 @@ end );
 InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S )
 
   local P, d, P_gen, S_gen, t_gen, norm, M, hom, 
-        orb, rep, itau, itau_orb, itau_rep, 
-        new_itau, new_rep, Snew_gen, len, img, n, o, 
+        orb, rep, tau, tau_orb, tau_rep, 
+        new_tau, new_rep, Snew_gen, len, img, n, o, 
         res, g, x, i, j;
 
   if not IsStandardAffineCrystGroup( S ) then
@@ -724,6 +724,7 @@ InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S )
     P:=Group( One(GL(d, Integers)) );
   fi;
 
+
   P_gen := GeneratorsOfGroup(P);
   S_gen := List(P_gen, x -> PreImagesRepresentative(hom, x));
   S_gen := List(S_gen, x -> AugmentedMatrixOnLeft(x{[1..d]}{[1..d]}, List(x{[1..d]}[d+1], FractionModOne)));
@@ -741,23 +742,25 @@ InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S )
   # BETTINA EICK,1 BERND SOUVIGNIER2
   # page 318
   # 7. Definition.
-  # 2. Space groups containing a subgroup isomorphic to their full point group are called symmorphic space groups. This is the case if and only if the image of \tau lies in Z^n.
+  # 2. Space groups containing a subgroup isomorphic to their full point group are called symmorphic space groups. This is the case if and
+  # only if the image of \tau lies in Z^n.
 
-  itau:=List(Concatenation(List( S_gen, x -> x{[1..d]}[d+1] )), FractionModOne); 
+  tau:=List(Concatenation(List( S_gen, x -> x{[1..d]}[d+1] )), FractionModOne); 
 
   orb := [S_gen];
   rep := [One(S)];
-  itau_orb:=[itau];
-  itau_rep:=[One(S)];
+  tau_orb:=[tau];
+  tau_rep:=[One(S)];
 
   # catch the trivial cases and 
   # SymmorphicSpaceGroup，直接返回结果即可。
   if not ( 
           IsTrivial(P) or 
           IsEmpty(norm) or 
-          ForAll(itau, IsZero) # SymmorphicSpaceGroup
-         ) then
- 
+          # SymmorphicSpaceGroup
+          ForAll( tau, IsZero ) 
+          ) then
+
     # 因为 norm 是作用在点群上的，所以必须首先枚举完
     # norm 作用下的 P_gen 的所有可能变化，
     # 然后，再进一步处理。
@@ -787,27 +790,28 @@ InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S )
             # Snew:=AffineCrystGroupOnLeft( Concatenation( Snew_gen, t_gen) );
             # Print( S^(new_rep^-1) = Simg, " ", Simg = Snew, "\n" );
                 
-            new_itau:=List(Concatenation(List( Snew_gen, x -> x{[1..d]}[d+1] )), FractionModOne); 
+            new_tau:=List(Concatenation(List( Snew_gen, x -> x{[1..d]}[d+1] )), FractionModOne); 
             
-            # itau_orb 中的两项所对应的 SG 之间可以通过纯平移共轭同构，其中包括了它们相等的情况（零解）。
+            # tau_orb 中的两项所对应的 SG 之间可以通过纯平移共轭同构，其中包括了它们相等的情况（零解）。
             # 因此单独使用 ForAll 也是可以的，但是基于第一个条件可以提高效率，避免不必要的计算：
-            if not new_itau in itau_orb and ForAll(List(itau_orb, x -> SolveInhomEquationsModZ( M, new_itau - x, false)[1] ), IsEmpty) then
-              Add( itau_orb, new_itau );
-              Add( itau_rep, new_rep );
+            if not new_tau in tau_orb and ForAll(List(tau_orb, x -> SolveInhomEquationsModZ( M, new_tau - x, false)[1] ), IsEmpty) then
+              Add( tau_orb, new_tau );
+              Add( tau_rep, new_rep );
             fi;
           fi;
         od;
       od;
 
     until len = Size(orb);
-
+  
   fi;
 
   res := rec( 
-              orb  := itau_orb,
-              rep  := itau_rep,
+              orb  := tau_orb,
+              rep  := tau_rep,
               M     := M 
             );
+
   return res;
 
 end );
@@ -816,7 +820,7 @@ end );
 InstallGlobalFunction(
 OrbitSpaceGroupStdByCollectEquivExtensions, function( S )
   local P, d, norm, Pgen, I, 
-        N, F, rels, mat, ext, oscee, orbs,
+        N, F, rels, mat, ext, orbcee, orb,
         Sgen, t, M, pos, x;
 
   # S:= SpaceGroup(4, 834);
@@ -849,8 +853,8 @@ OrbitSpaceGroupStdByCollectEquivExtensions, function( S )
     # 
     Sgen := [ IdentityMat(d + 1) ];
     t := List( Concatenation(List(Sgen, x ->x{[1..d]}[d+1])), FractionModOne );
-    orbs := [t];
-    return orbs;
+    orb := [t];
+    return orb;
   fi;
 
   # first get group relators for grp
@@ -882,19 +886,19 @@ OrbitSpaceGroupStdByCollectEquivExtensions, function( S )
   #  while ll<>[] do
   #   SubtractSet( ll, orb );
   #  od; 
-  oscee := CollectEquivExtensions( ext[1], ext[2], norm, P );
+  orbcee := CollectEquivExtensions( ext[1], ext[2], norm, P );
   # For debug
-  # oscee := dev1CollectEquivExtensions( ext[1], ext[2], norm, PZ );
+  # orbcee := dev1CollectEquivExtensions( ext[1], ext[2], norm, PZ );
   
 
-  # osnpg:=OrbitSpaceGroupStdByNormalizerPointGroup(S);
-  # M := osnpg.M;
-  # orb := osnpg.orbs;
-  # norm := osnpg.norms;
+  # orbnpg:=OrbitSpaceGroupStdByNormalizerPointGroup(S);
+  # M := orbnpg.M;
+  # orb := orbnpg.orb
+  # rep := orbnpg.rep;
 
   # # 不完全相同，但是它们之间以纯平移共轭一一对应：
-  # for i in Difference( orb, oscee[2] ) do
-  #   for j in Difference( oscee[2], orb ) do
+  # for i in Difference( orb, orbcee[2] ) do
+  #   for j in Difference( orbcee[2], orb ) do
   #     sol := SolveInhomEquationsModZ(M, i - j, false)[1];
   #     if not IsEmpty(sol) then
   #       Print(i, " ",j,"\n");
@@ -902,7 +906,7 @@ OrbitSpaceGroupStdByCollectEquivExtensions, function( S )
   #   od;
   # od;
 
-  # 如下，即可从 oscee 中提取出当前SG在 std 表示下的被norm 共轭的所有可能的 orbits： 
+  # 如下，即可从 orbcee 中提取出当前SG在 std 表示下的被norm 共轭的所有可能的 orbits： 
   # 注意和当前的惯例 matrices acting on the left or right 的情况对应：
   # For matrices acting on the right
   # 这里的用法和我的写法是一致的：
@@ -926,10 +930,10 @@ OrbitSpaceGroupStdByCollectEquivExtensions, function( S )
 
   Sgen:=List( Pgen, x -> PreImagesRepresentative(PointHomomorphism( S ), x ) );  
   t:= List(Concatenation(List(Sgen, x ->x[d+1]{[1..d]})), FractionModOne);
-  pos:=First([1..Size(oscee)], i -> First( oscee[i], x -> not IsEmpty( SolveInhomEquationsModZ(M, t -x, true)[1] ) ) <> fail );
+  pos:=First([1..Size(orbcee)], i -> First( orbcee[i], x -> not IsEmpty( SolveInhomEquationsModZ(M, t -x, true)[1] ) ) <> fail );
 
-  orbs := oscee[pos];
-  return orbs;
+  orb := orbcee[pos];
+  return orb;
 
 end );  
 
@@ -943,7 +947,7 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
           S1s, S2s, S3s, 
           P1s, P2s, S3sgen, t3s, t, sol, pos,
           c1, C1, c2, C2,  c3, C3, C4, C,
-          osnpg, M, orb, rep;
+          orbnpg, M, orb, rep;
 
     # Affine crystallographic groups vs space groups.
     # https://github.com/gap-packages/cryst/issues/36#issuecomment-1472348928
@@ -1017,10 +1021,10 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
     # S1s ^ C3 = S2s ^ C4 
     # S1s ^ C3 * (C4 ^ -1) = S2s = S2^C2
     # S1 ^ (C1 * C3 * C4 ^ -1 * C2 ^ -1) = S2
-    osnpg := OrbitSpaceGroupStdByNormalizerPointGroup( S2s );
-    M := osnpg.M;
-    orb := osnpg.orb;
-    rep := osnpg.rep;
+    orbnpg := OrbitSpaceGroupStdByNormalizerPointGroup( S2s );
+    M := orbnpg.M;
+    orb := orbnpg.orb;
+    rep := orbnpg.rep;
 
     # 验证结果的正确性：
     # S1^(C^-1) = S2;
