@@ -77,22 +77,12 @@ end );
 ##
 #F  CaratName( S ) . . . . . Call Carat program `Name'
 ##
+S:=S2;
 InstallGlobalFunction( CaratName, function( S )
   
   local Str, Sgen, out,
         dir, shell, d, cmd, program, cs, args, 
         _in, _out, res, err, x; 
-
-  # get temporary file names
-  Sgen := CaratTmpFile( "Sgen" );  
-  out := CaratTmpFile( "out"  );
-  
-  d := DimensionOfMatrixGroup( S ) - 1;
-
-  # `Name' is based on the CARAT database of all Q-classes of finite unimodular groups of degree up to 6. 
-  if not IsSpaceGroup(S) or d > 6 then
-    Error( "only works for space groups of degree up to 6" );
-  fi;
 
   # https://docs.gap-system.org/pkg/caratinterface/htm/CHAP003.htm#SECT001
   # In crystallography, the convention usually is that matrix groups act from the left on column vectors. This convention is adopted also in CARAT.
@@ -100,6 +90,18 @@ InstallGlobalFunction( CaratName, function( S )
     Str := TransposedMatrixGroup( S );
     return CaratName( Str );
   fi;
+
+  # get temporary file names
+  Sgen := CaratTmpFile( "Sgen" );  
+  out := CaratTmpFile( "out"  );
+
+  d := DimensionOfMatrixGroup( S ) - 1;
+
+  # `Name' is based on the CARAT database of all Q-classes of finite unimodular groups of degree up to 6. 
+  if not IsSpaceGroup(S) or d > 6 then
+    Error( "only works for space groups of degree up to 6" );
+  fi;
+
 
   # compatiable with the result returned by `Name' in this case:
   if IsTrivial( PointGroup( S ) ) then
@@ -111,6 +113,7 @@ InstallGlobalFunction( CaratName, function( S )
     S := StandardAffineCrystGroup( S ); 
   fi;
   CaratWriteMatrixFile(Sgen, GeneratorsOfGroup( S ));
+  # CaratShowFile(Sgen);
 
   dir := DirectoryCurrent();
   shell := Filename(DirectoriesSystemPrograms(), "sh");
@@ -125,6 +128,11 @@ InstallGlobalFunction( CaratName, function( S )
   
   CloseStream( _in );
   CloseStream( _out );
+
+  # S is not a space group: 
+  if err <> 0 then
+    return fail;
+  fi;
 
   # read back the result
   _out := InputTextFile( out );
@@ -258,11 +266,20 @@ InstallGlobalFunction( CaratQ_catalog, function( str, out )
 
 end );
 
-
 InstallGlobalFunction( 
 IdentifySpaceGroup, function( S )
   
   local d, res, name, nr, nrs, Sref, c, C, i;
+
+  if IsAffineCrystGroupOnRight( S ) then
+    S := TransposedMatrixGroup( S );
+    # 此时的进一步递归处理：
+    res := IdentifySpaceGroup( S );
+    if res <> fail then
+      res[2] := TransposedMat(res[2]) ^-1;
+    fi;
+    return res;
+  fi;
 
   d := DimensionOfMatrixGroup( S ) - 1;
   # CrystCatRecord(TransposedMatrixGroup(S)).parameters;
@@ -271,15 +288,12 @@ IdentifySpaceGroup, function( S )
     Error("only applicable to space groups in dimensions up to 6");
   fi;
 
-  if IsAffineCrystGroupOnRight( S ) then
-    S := TransposedMatrixGroup( S );
-    # 此时的进一步递归处理：
-    res := IdentifySpaceGroup( S );
-    res[2] := TransposedMat(res[2]) ^-1;
-    return res;
-  fi;
-
   name:=CaratName( S );
+  
+  # S is not a space group:
+  if name = fail then
+    return fail;
+  fi;
 
   if d = 2 then 
     nr:=Position(cryst2names, name);
@@ -923,9 +937,9 @@ OrbitSpaceGroupStdByCollectEquivExtensions, function( S )
   
 
   # orbnpg:=OrbitSpaceGroupStdByNormalizerPointGroup(S);
-  # M := orbnpg.tau   896:   # orb := orbnpg.tau
-  # orb := orbnpg.tau
-  # rep := orbnpg.tau;
+  # tau := orbnpg.tau;
+  # rep := orbnpg.rep;
+  # M := orbnpg.M;
 
   # # 不完全相同，但是它们之间以纯平移共轭一一对应：
   # for i in Difference( orb, orbcee[2] ) do
