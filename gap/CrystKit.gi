@@ -77,7 +77,6 @@ end );
 ##
 #F  CaratName( S ) . . . . . Call Carat program `Name'
 ##
-S:=S2;
 InstallGlobalFunction( CaratName, function( S )
   
   local Str, Sgen, out,
