@@ -709,9 +709,9 @@ end );
 # end );
 
 
-InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S )
+InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S, norm )
 
-  local P, d, P_gen, S_gen, norm, M, hom,
+  local P, d, P_gen, S_gen, M, hom,
         orb, rep, t, tau, new_tau, new_rep,
         Snew_gen, len, new_orb, n, o, pos,
         res, g, x, y,
@@ -743,8 +743,9 @@ InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S )
   P_gen := GeneratorsOfGroup(P);
   S_gen := List(P_gen, x -> PreImagesRepresentative(hom, x));
   S_gen := List(S_gen, x -> AugmentedMatrixOnLeft(x{[1..d]}{[1..d]}, List(x{[1..d]}[d+1], FractionModOne)));
-
-  norm := GeneratorsOfGroup(Normalizer(GL(d, Integers), P));
+  
+  # Use norm as a argument for flexiable control.
+  # norm := GeneratorsOfGroup(Normalizer(GL(d, Integers), P));
   norm := List(Filtered(norm, x -> not x in P), y -> AugmentedMatrixOnLeft(y, 0*[1..d]));
 
   # Definition of symmorphic space groups:
@@ -807,7 +808,7 @@ InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S )
             # tau 中的两项所对应的 SG 之间可以通过纯平移共轭同构，其中包括了它们相等的情况（零解）。
             # 因此单独使用 ForAll 也是可以的，但是基于第一个条件可以提高效率，避免不必要的计算：
             if not new_tau in tau and ForAll(List(tau, x -> SolveInhomEquationsModZ( M, new_tau - x, false)[1] ), IsEmpty) then
-          
+            
               Add(orb, new_orb);
               Add(tau, new_tau);
               Add(rep, new_rep);
@@ -874,9 +875,9 @@ OrbitSpaceGroupStdByCollectEquivExtensions, function( S )
     Error("only work with StandardAffineCrystGroup");
   fi;
 
-  # By default, the related functions called here implemented in
-  # Cryst package are designed for matrices acting on the right 
-  # 
+  # By default, the related functions called here 
+  # implemented in Cryst package are designed for matrices 
+  # acting on the right 
   if IsAffineCrystGroupOnLeft( S ) then
     S := TransposedMatrixGroup(S);
   fi;
