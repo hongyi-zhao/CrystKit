@@ -367,12 +367,6 @@ end );
 #   return apar;
 # end );
 
-# 基于 CRT 的算法实现：
-# Orbits: These SGs are affine isomorphic (but not equivalent/identical) by a conjugator whose linear part is a element of NormalizerPointGroupInGLnZ
-# and the transation part is zero.
-
-
-# 轨道长度必须小于CRT约束的点群元的 order：
 # Find the highest finite order group element of an infinite group.
 # https://mail.google.com/mail/u/0/?ogbl#sent/KtbxLwHLtgJlPSGRwNfgCnBVmRxJDfvqdV
 #  The highest finite order of an element of your group is 6, cf. https://en.wikipedia.org/wiki/Crystallographic_restriction_theorem .
