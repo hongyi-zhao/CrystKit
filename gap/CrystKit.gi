@@ -479,9 +479,9 @@ end );
 # Theorem II. For each fixed n there are only finitely many isomorphism
 # classes of n-dimensional crystallographic groups.
 
-InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S )
+InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S, norm )
 
-  local P, d, P_gen, S_gen, norm, M, hom,
+  local P, d, P_gen, S_gen, M, hom,
         orb, rep, t, tau, new_tau, new_rep,
         Snew_gen, len, new_orb, n, o, pos,
         res, g, x, y,
@@ -514,8 +514,10 @@ InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S )
   S_gen := List(P_gen, x -> PreImagesRepresentative(hom, x));
   S_gen := List(S_gen, x -> AugmentedMatrixOnLeft(x{[1..d]}{[1..d]}, List(x{[1..d]}[d+1], FractionModOne)));
   
-  norm := GeneratorsOfGroup(Normalizer(GL(d, Integers), P));
+
+  # norm := GeneratorsOfGroup(Normalizer(GL(d, Integers), P));
   norm := List(Filtered(norm, x -> not x in P), y -> AugmentedMatrixOnLeft(y, 0*[1..d]));
+
 
   # Definition of symmorphic space groups:
   # Algorithms for Crystallographic Groups
@@ -760,8 +762,8 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
     local d, P1, P2, S1tr, S2tr,
           S1s, S2s, S3s, 
           P1s, P2s, S3sgen, t3s, t, sol, pos,
-          c1, C1, c2, C2,  c3, C3, C4, C,
-          orbnpg, tau, rep, M;
+          c1, C1, c2, C2, c3, C3, C4, C,
+          norm, orbnpg, tau, rep, M;
 
     # Affine crystallographic groups vs space groups.
     # https://github.com/gap-packages/cryst/issues/36#issuecomment-1472348928
@@ -835,7 +837,8 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
     # S1s ^ C3 = S2s ^ C4 
     # S1s ^ C3 * (C4 ^ -1) = S2s = S2^C2
     # S1 ^ (C1 * C3 * C4 ^ -1 * C2 ^ -1) = S2
-    orbnpg := OrbitSpaceGroupStdByNormalizerPointGroup( S2s );
+    norm := GeneratorsOfGroup(Normalizer(GL(d,Integers), PointGroup( S2s ))); 
+    orbnpg := OrbitSpaceGroupStdByNormalizerPointGroup( S2s, norm );
     tau := orbnpg.tau;
     rep := orbnpg.rep;
     M := orbnpg.M;
