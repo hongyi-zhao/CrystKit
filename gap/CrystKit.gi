@@ -479,14 +479,14 @@ end );
 # Theorem II. For each fixed n there are only finitely many isomorphism
 # classes of n-dimensional crystallographic groups.
 
-InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S, norm )
+InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S, Pgen,norm )
 
-  local P, d, P_gen, S_gen, M, hom,
-        orb, rep, t, tau, new_tau, new_rep,
-        Snew_gen, len, new_orb, n, o, pos,
+  local P, d, Sgen, M, hom,
+        orb, rep, t, tau, newtau, newrep,
+        Snewgen, len, neworb, n, o, pos,
         res, g, x, y,
         # For debug:
-        rep_pos, t_gen, Simg, Snew, lst, i, ll;
+        reppos, tgen, Simg, Snew, lst, i, ll;
 
   if not IsStandardAffineCrystGroup( S ) then
     Error("only work with StandardAffineCrystGroup");
@@ -510,9 +510,9 @@ InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S, no
   fi;
 
 
-  P_gen := GeneratorsOfGroup(P);
-  S_gen := List(P_gen, x -> PreImagesRepresentative(hom, x));
-  S_gen := List(S_gen, x -> AugmentedMatrixOnLeft(x{[1..d]}{[1..d]}, List(x{[1..d]}[d+1], FractionModOne)));
+  # Pgen := GeneratorsOfGroup(P);
+  Sgen := List(Pgen, x -> PreImagesRepresentative(hom, x));
+  Sgen := List(Sgen, x -> AugmentedMatrixOnLeft(x{[1..d]}{[1..d]}, List(x{[1..d]}[d+1], FractionModOne)));
   
 
   # norm := GeneratorsOfGroup(Normalizer(GL(d, Integers), P));
@@ -526,16 +526,16 @@ InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S, no
   # 7. Definition.
   # 2. Space groups containing a subgroup isomorphic to their full point group are called symmorphic space groups. This is the case if and
   # only if the image of \tau lies in Z^n.
-  t := List(Concatenation(List( S_gen, x -> x{[1..d]}[d+1] )), FractionModOne); 
+  t := List(Concatenation(List( Sgen, x -> x{[1..d]}[d+1] )), FractionModOne); 
   
-  orb := [ S_gen ];
+  orb := [ Sgen ];
   tau := [ t ];
   rep := [ One(S) ];
-  M := Concatenation( List( P_gen, g -> g - IdentityMat(d) ) );
+  M := Concatenation( List( Pgen, g -> g - IdentityMat(d) ) );
 
   # For debug:
-  rep_pos := [ [One(S), 1] ];
-  t_gen := List(IdentityMat(d), x -> AugmentedMatrixOnLeft(IdentityMat(d), x));
+  reppos := [ [One(S), 1] ];
+  tgen := List(IdentityMat(d), x -> AugmentedMatrixOnLeft(IdentityMat(d), x));
 
   # catch the trivial cases and 
   # SymmorphicSpaceGroup，直接返回结果即可。
@@ -547,45 +547,45 @@ InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S, no
           ) then
 
     # 因为 norm 是作用在点群上的，所以必须首先枚举完
-    # norm 作用下的 P_gen 的所有可能变化，
+    # norm 作用下的 Pgen 的所有可能变化，
     # 然后，再进一步处理。
     repeat
       len := Size(orb);
       for n in norm do
         for o in orb do
           pos := Position(orb, o);
-          new_orb := OnTuples(o, n);
-          new_orb := List(new_orb, x -> AugmentedMatrixOnLeft(x{[1..d]}{[1..d]}, List(x{[1..d]}[d+1], FractionModOne)));
+          neworb := OnTuples(o, n);
+          neworb := List(neworb, x -> AugmentedMatrixOnLeft(x{[1..d]}{[1..d]}, List(x{[1..d]}[d+1], FractionModOne)));
 
-          if not new_orb in orb then
-            new_rep := rep[pos] * n;
+          if not neworb in orb then
+            newrep := rep[pos] * n;
                
-            # Simg:=AffineCrystGroupOnLeft(Concatenation(new_orb, t_gen));
-            # 对点群部分生成元用 new_rep{[1..d]}{[1..d]}^-1 作用，
+            # Simg:=AffineCrystGroupOnLeft(Concatenation(neworb, tgen));
+            # 对点群部分生成元用 newrep{[1..d]}{[1..d]}^-1 作用，
             # 此时，必然点群不变，然后再经过 hom 在 S 中找出对应的 Sgen，
             # 这样实际上，必然仍生成 S，
-            # 由此，进一步得到维持和原Sgen的点群部分对应的 Snew_gen 的方法，
+            # 由此，进一步得到维持和原Sgen的点群部分对应的 Snewgen 的方法，
             # 同时使得 Simg = Snew。
             # 这样，就实现了保持点群部分全同的轨道表示。
-            # Snew_gen:=List(P_gen, x -> PreImagesRepresentative(hom, x ^ (new_rep{[1..d]}{[1..d]}^-1) ) ^ new_rep );
+            # Snewgen:=List(Pgen, x -> PreImagesRepresentative(hom, x ^ (newrep{[1..d]}{[1..d]}^-1) ) ^ newrep );
             # or
-            Snew_gen:=List( OnTuples(P_gen, new_rep{[1..d]}{[1..d]}^-1), x -> PreImagesRepresentative( hom, x ) ^ new_rep );
+            Snewgen:=List( OnTuples(Pgen, newrep{[1..d]}{[1..d]}^-1), x -> PreImagesRepresentative( hom, x ) ^ newrep );
             
-            # Snew:=AffineCrystGroupOnLeft( Concatenation( Snew_gen, t_gen) );
-            # Print( S^(new_rep^-1) = Simg, " ", Simg = Snew, "\n" );
+            # Snew:=AffineCrystGroupOnLeft( Concatenation( Snewgen, tgen) );
+            # Print( S^(newrep^-1) = Simg, " ", Simg = Snew, "\n" );
                 
-            new_tau:=List(Concatenation(List( Snew_gen, x -> x{[1..d]}[d+1] )), FractionModOne);
+            newtau:=List(Concatenation(List( Snewgen, x -> x{[1..d]}[d+1] )), FractionModOne);
             
             # tau 中的两项所对应的 SG 之间可以通过纯平移共轭同构，其中包括了它们相等的情况（零解）。
             # 因此单独使用 ForAll 也是可以的，但是基于第一个条件可以提高效率，避免不必要的计算：
-            if not new_tau in tau and ForAll(List(tau, x -> SolveInhomEquationsModZ( M, new_tau - x, false)[1] ), IsEmpty) then
+            if not newtau in tau and ForAll(List(tau, x -> SolveInhomEquationsModZ( M, newtau - x, false)[1] ), IsEmpty) then
             
-              Add(orb, new_orb);
-              Add(tau, new_tau);
-              Add(rep, new_rep);
+              Add(orb, neworb);
+              Add(tau, newtau);
+              Add(rep, newrep);
               
               # For debug
-              Add(rep_pos, [n, pos]);
+              Add(reppos, [n, pos]);
 
             fi;
           fi;
@@ -597,20 +597,20 @@ InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S, no
   fi;
 
   # The following relationships hold:
-  # 1. S_i = S ^ rep[i];
+  # 1. Simg = S ^ rep[i];
 
   # for o in orb do
   #   pos := Position(orb, o);
-  #   Simg := AffineCrystGroupOnLeft( Concatenation(o, t_gen) );
+  #   Simg := AffineCrystGroupOnLeft( Concatenation(o, tgen) );
 
   #   Print( S ^( rep[pos]^-1 )  = Simg, "\n");
   # od;
 
-  # 2. The normalizer element corresponding to each position in the rep list
-  #  can be generated by the product of a specific ordered subset of the 
-  #  first elements of each item in the rep_pos list.
+  # 2. The normalizer elements in the rep list
+  #  correspond to the product of a specific ordered subset of the 
+  #  first elements of each item in the reppos list.
   #
-  # lst:=List(rep_pos, Last);
+  # lst:=List(reppos, Last);
   # for i in [1..Size(lst)] do
   #   pos := i;
   #   ll := [pos];
@@ -619,7 +619,7 @@ InstallGlobalFunction( OrbitSpaceGroupStdByNormalizerPointGroup, function( S, no
   #     pos:= lst[pos];
   #   od;
   #   ll := Reversed(ll);
-  #   Print(i, " ",rep[i] = Product(List(rep_pos, First){ll}),"\n");
+  #   Print(i, " ",rep[i] = Product(List(reppos, First){ll}),"\n");
   # od;
 
   res := rec( 
@@ -763,7 +763,7 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
           S1s, S2s, S3s, 
           P1s, P2s, S3sgen, t3s, t, sol, pos,
           c1, C1, c2, C2, c3, C3, C4, C,
-          norm, orbnpg, tau, rep, M;
+          Pgen, norm, orbnpg, tau, rep, M;
 
     # Affine crystallographic groups vs space groups.
     # https://github.com/gap-packages/cryst/issues/36#issuecomment-1472348928
@@ -826,7 +826,9 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
     S3s := S1s ^ (C3^-1);
     
     # 求 S2s 和 S3s 之间的同构关系：
-    S3sgen:= List( GeneratorsOfGroup(P2s), x -> PreImagesRepresentative(PointHomomorphism(S3s), x ) );
+    Pgen := GeneratorsOfGroup(P2s);
+
+    S3sgen:= List(Pgen, x -> PreImagesRepresentative(PointHomomorphism(S3s), x ));
     t3s:= List(Concatenation(List(S3sgen, x ->x{[1..d]}[d+1])), FractionModOne);
 
     # 汇总所有共轭关系如下：
@@ -837,8 +839,8 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
     # S1s ^ C3 = S2s ^ C4 
     # S1s ^ C3 * (C4 ^ -1) = S2s = S2^C2
     # S1 ^ (C1 * C3 * C4 ^ -1 * C2 ^ -1) = S2
-    norm := GeneratorsOfGroup(Normalizer(GL(d,Integers), PointGroup( S2s ))); 
-    orbnpg := OrbitSpaceGroupStdByNormalizerPointGroup( S2s, norm );
+    norm := GeneratorsOfGroup(Normalizer(GL(d,Integers), P2s)); 
+    orbnpg := OrbitSpaceGroupStdByNormalizerPointGroup(S2s, Pgen, norm);
     tau := orbnpg.tau;
     rep := orbnpg.rep;
     M := orbnpg.M;
