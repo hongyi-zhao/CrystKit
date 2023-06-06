@@ -1007,3 +1007,172 @@ InstallGlobalFunction( MinimalGeneratingSetAffineCrystGroup, function( S )
   return res;
 
 end );
+
+
+InstallGlobalFunction( 
+ConjugatorMatrixGroups, function( G1, G2 )
+
+  local cc1, cc2, ccr2, gen1, gen2, lst, hom1, hom2, m, r, x, c, g;
+
+  if not IsMatrixGroup( G1 ) or 
+     not IsMatrixGroup( G2 ) or
+     not IsFinite( G1 ) or 
+     not IsFinite( G2 ) then
+    Error("only work with finite matrix groups" );
+  fi;
+
+  # Check if G1 and G2 are isomorphic groups of the same size:
+  if Size( G1 ) <> Size( G2 ) or fail = IsomorphismGroups(G1,G2) then
+    return fail;
+  fi;
+  
+  # Using the minimal generating set to improve algorithm efficiency.
+  gen1 := MinimalGeneratingSet(G1);
+  G1:= GroupWithGenerators(gen1);
+  # hom1:=GroupHomomorphismByImagesNC(G1, G1);
+  # or simply
+  hom1:=IdentityMapping(G1);
+
+  # Define polynomial variable
+  x := Indeterminate(Rationals, "x");
+
+  # Calculate elementary divisors and conjugacy class sizes for each generator in G1's minimal generating set
+  cc1 := ConjugacyClasses(G1);
+  lst := List(gen1, g -> [
+    ElementaryDivisorsMat(PolynomialRing(Rationals, 1), x * g^0 - g * One(x)),
+    Size(First(cc1, c -> g in c))
+  ]);
+
+  # Calculate conjugacy classes representatives for G2
+  cc2 := ConjugacyClasses(G2);
+
+  ccr2 := Cartesian(List(lst, l -> Filtered(cc2, c -> 
+    ElementaryDivisorsMat(PolynomialRing(Rationals, 1), x * Representative(c)^0 - Representative(c) * One(x)) = l[1] and Size(c) = l[2]
+  )));
+
+  # Find a set of generators of G2 that ensures LinearRepresentationIsomorphism between G1 and G2
+  for r in ccr2 do
+    for gen2 in Cartesian(List(r, List)) do
+      if Subgroup(G2, gen2) = G2 then
+        G2:=GroupWithGenerators(gen2);
+        hom2 := GroupHomomorphismByImagesNC(G1, G2);
+        # compute m, such that `G1^(m^-1)=G2`
+        m:=LinearRepresentationIsomorphism(hom1, hom2 : use_kronecker);
+        if fail <> m then
+          # Normalize `m`
+          m := m/Gcd(Flat(m));
+          # Return the inverse of `m`, 
+          return m^-1;
+        fi;  
+      fi;
+    od;
+  od;
+
+  # If such a isomorphism cannot be found, return fail
+  return fail;
+
+end );
+
+
+InstallGlobalFunction( 
+EnantiomorphicPairOfSpaceGroup, function( S )
+  local d, trT, P, Pgen, N, norm, diag, C, res,
+        A, B, z, Ugen, orbnpg, orbnpg_posi, i, x;
+
+  if IsAffineCrystGroupOnRight( S ) then
+    S := TransposedMatrixGroup( S );
+    res := EnantiomorphicPairOfSpaceGroup( S );
+
+    if res <> fail then
+      res := TransposedMat( res );
+    fi;
+
+    return res;
+  fi;
+
+  if not IsStandardAffineCrystGroup( S ) then
+    S := StandardAffineCrystGroup(S);
+  fi;
+
+  d:= DimensionOfMatrixGroup(S) - 1;
+  trT := TransposedMat(TranslationBasis( S ));
+  P:=PointGroup(S);
+  Pgen:=GeneratorsOfGroup(P);
+  
+  N:=Normalizer(GL(d,Integers), P);
+  norm :=Set(Filtered(GeneratorsOfGroup(N), x -> not x in P));
+  
+  # 便于后续构造 Schreier generators:
+  # https://en.wikipedia.org/wiki/Schreier%27s_lemma
+  # https://github.com/gap-packages/cryst/issues/23#issuecomment-844364463
+  AddSet(norm, IdentityMat(d));
+
+  # ref AffineNormalizer
+  # For right action:
+  # we work in a standard representation
+  # if not IsStandardAffineCrystGroup( S ) then
+  #     invT := T^-1;
+  #     gens := List( GeneratorsOfGroup( N ), x -> T * x * invT );
+  #     Pgens := List( Pgens, x -> T * x * invT );
+  #     Sgens := List( Sgens, x -> S!.lconj * x * S!.rconj );
+  # else
+  #     gens := GeneratorsOfGroup( N );
+  # fi;
+ 
+  diag:=List( [1..d+1], i -> 1 );
+  diag[1]:=-1;
+  
+  C:=fail;
+ 
+  if ForAll(Pgen, x -> DeterminantMat(x)=1) then
+    if ForAll(norm, x -> DeterminantMat(x)=1) then
+      # Print("case 1: ", i, "\n");
+      # The conjugator to get the enantiomorphic partner
+      C:=DiagonalMat(diag);
+    else
+  
+      A:=Filtered(norm, x -> DeterminantMat(x)=1);
+      B:=Filtered(norm, x -> DeterminantMat(x)=-1);
+      z:=First(B);
+      Ugen:=Union(A, z * B, B/z, z * A/z );
+     
+      orbnpg:=OrbitSpaceGroupStdByNormalizerPointGroup(S, Pgen, norm);
+      orbnpg_posi:=OrbitSpaceGroupStdByNormalizerPointGroup(S, Pgen, Ugen);
+      
+      # The following is enough for quick check:
+      if Size(orbnpg.tau)/2=Size(orbnpg_posi.tau) then
+        # Print("case 2: ", i, "\n");
+        # The conjugator to get the enantiomorphic partner
+        C:=AugmentedMatrixOnLeft(z, 0 * [1..d]);
+      fi;
+
+      # 进一步彻底验证轨道分裂关系：
+      # if Size( orbnpg.rep) >=2 and ForAny(orbnpg.rep, x -> DeterminantMat(x) = -1) then
+
+      #   pos:=First([1..Size(orbnpg.rep)], i -> DeterminantMat(orbnpg.rep[i]) = -1);
+      #   tau:=orbnpg.tau[pos];
+   
+      #   P1gen:=List( [1..Size(Pgen)], i -> AugmentedMatrixOnLeft(Pgen[i],tau{[1 + d*(i-1)..i* d]}) );
+              
+      #   S_nega:=AffineCrystGroupOnLeft(Concatenation(P1gen, tgen));
+
+      #   orbnpg_nega:=OrbitSpaceGroupStdByNormalizerPointGroup(S_nega, Pgen, Ugen);
+            
+      #   M:=orbnpg.M;
+      #   orb:=Difference(Set(Concatenation(orbnpg_posi.tau, orbnpg_nega.tau)), orbnpg.tau);
+      #   # if Size(orbnpg.tau)/2=Size(orbnpg_posi.tau) and ForAll(orb, x -> fail <> First(orbnpg.tau, y -> not IsEmpty(SolveInhomEquationsModZ(M, x -y,false)[1]) ) ) then
+      #     Print("case 2: ", i, "\n");
+      #     Add(lst3,i);
+      #   fi;
+
+      # fi;
+    fi; 
+  fi;
+
+  if C = fail then 
+    return C;
+  else
+    return C^(AugmentedMatrixOnLeft(trT, 0*[1..d])^-1);
+  fi;
+
+end );

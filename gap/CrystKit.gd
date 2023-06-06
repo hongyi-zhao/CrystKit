@@ -29,3 +29,7 @@ DeclareGlobalFunction( "OrbitSpaceGroupStdByCollectEquivExtensions" );
 DeclareGlobalFunction( "AffineIsomorphismSpaceGroups" );
 DeclareGlobalFunction( "IdentifySpaceGroup" );
 DeclareGlobalFunction( "MinimalGeneratingSetAffineCrystGroup" );
+
+
+DeclareGlobalFunction( "ConjugatorMatrixGroups" );
+DeclareGlobalFunction( "EnantiomorphicPairOfSpaceGroup" );
