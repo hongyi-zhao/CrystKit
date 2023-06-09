@@ -7,9 +7,14 @@
 InstallGlobalFunction( IdentifyGroupGenerators, function( S )
   
   local gens, vecname, d, vec, g, i;
-
-  if not IsAffineCrystGroupOnLeft(S) then
+  
+  # BCS IDENTIFY GROUP 和 findssg 都是工作于左作用下面的标准表示的。
+  if IsAffineCrystGroupOnRight(S) then
     S:=TransposedMatrixGroup(S);
+  fi;
+
+  if not IsStandardSpaceGroup(S) then
+    S:=StandardAffineCrystGroup(S);
   fi;
 
   gens:= GeneratorsOfGroup(S);
