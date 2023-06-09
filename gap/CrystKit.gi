@@ -4,14 +4,15 @@
 
 # Define variable-length `Indeterminate's in function.
 # https://mail.google.com/mail/u/0/?ogbl#search/in%3Asent+gap/QgrcJHsBqxpXbHCSnPqBGGBZRDqphmxvpZb
-InstallGlobalFunction( IdentifyGroupGenerators, function( gens )
+InstallGlobalFunction( IdentifyGroupGenerators, function( S )
   
-  local d, vecname, vec, g, i;
+  local gens, vecname, d, vec, g, i;
 
-  if not ForAll(gens, IsAffineMatrixOnLeft) then
-    Error("AffineMatrixOnLeft test failed");
+  if not IsAffineCrystGroupOnLeft(S) then
+    S:=TransposedMatrixGroup(S);
   fi;
 
+  gens:= GeneratorsOfGroup(S);
   vecname:=["x","y","z","t","u","v"];
   d := First(Set(DimensionsMat(gens[1]))) - 1;
   
@@ -305,7 +306,7 @@ IdentifySpaceGroup, function( S )
     nrs:=Positions(cryst3names, name );
     
     # determine from the enantiomorphic_pairs
-    if Size(nrs) = 1 or 1 <> DeterminantMat(AffineIsomorphismSpaceGroups(S,SpaceGroupOnLeftIT(d,nrs[2]))) then
+    if Size(nrs) = 1 or 0 > DeterminantMat(AffineIsomorphismSpaceGroups(S,SpaceGroupOnLeftIT(d,nrs[2]))) then
       nr := nrs[1];
     else
       nr := nrs[2];
