@@ -33,3 +33,6 @@ DeclareGlobalFunction( "MinimalGeneratingSetAffineCrystGroup" );
 
 DeclareGlobalFunction( "ConjugatorMatrixGroups" );
 DeclareGlobalFunction( "EnantiomorphicPairOfSpaceGroup" );
+
+DeclareGlobalFunction( "DirectSumDecompositionMatrix" );
+

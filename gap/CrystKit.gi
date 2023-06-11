@@ -1182,3 +1182,35 @@ EnantiomorphicPairOfSpaceGroup, function( S )
   fi;
 
 end );
+
+
+InstallGlobalFunction( 
+DirectSumDecompositionMatrix, function(l)
+     local cls, cl, rest, el, out, cs, supp, col;
+
+     col:=function(l1,l2)
+         return ForAny([1..Length(l1)],i->l1[i]<>0 and l2[i]<>0);
+     end;
+
+     cls:=[];
+     rest:=StructuralCopy(l);
+
+     while rest<>[] do
+         el:=rest[1];
+         cl:=Filtered(rest, r->col(r,el));
+         if cl=[] then
+             cl:=[el];
+         fi;
+         Add(cls,cl);
+         rest:=Filtered(rest,r->not(r in cl));
+     od;
+     out:=[];
+     for cs in cls do
+         supp:=Filtered([1..Length(l[1])], i->ForAny(cs, c->c[i]<>0));
+         Add(out,List(cs,c->c{supp}));
+     od;
+
+     return(out);
+
+end );
+
