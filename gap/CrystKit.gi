@@ -1184,33 +1184,46 @@ EnantiomorphicPairOfSpaceGroup, function( S )
 end );
 
 
+# Direct sum decomposition of a matrix.
+# https://mail.google.com/mail/u/0/?ogbl#sent/KtbxLwHHpRfqHzrslftpfCbXhvQJngJvxV
+# Dear forum,
+
+# This is a possible approach, inspired in
+# https://github.com/gap-packages/numericalsgps/blob/fcde379b01bd44b1fa80cd69d7ddd6a8acdcfe2f/gap/catenary-tame.gi#LL803C1-L831C4
+# Dear Zhao,
+
+# Try this. It should work even for non-square matrices.
 InstallGlobalFunction( 
 DirectSumDecompositionMatrix, function(l)
-     local cls, cl, rest, el, out, cs, supp, col;
+    
+  local nr,nc,i,j,nzr,nzb,rest,bls;
 
-     col:=function(l1,l2)
-         return ForAny([1..Length(l1)],i->l1[i]<>0 and l2[i]<>0);
-     end;
-
-     cls:=[];
-     rest:=StructuralCopy(l);
-
-     while rest<>[] do
-         el:=rest[1];
-         cl:=Filtered(rest, r->col(r,el));
-         if cl=[] then
-             cl:=[el];
-         fi;
-         Add(cls,cl);
-         rest:=Filtered(rest,r->not(r in cl));
-     od;
-     out:=[];
-     for cs in cls do
-         supp:=Filtered([1..Length(l[1])], i->ForAny(cs, c->c[i]<>0));
-         Add(out,List(cs,c->c{supp}));
-     od;
-
-     return(out);
+  rest:=StructuralCopy(l);
+  nr:=Length(rest);
+  nc:=Length(rest[1]);
+  bls:=[];
+  i:=1;
+  j:=1;
+  while nr>0 or nc>0 do
+      nzr:=true;
+      nzb:=true;
+      while nzr or nzb do
+          nzr:=ForAny([1..i],i1->ForAny([j+1..nc],j1->rest[i1][j1]<>0));
+          nzb:=ForAny([i+1..nr],i1->ForAny([1..j],j1->rest[i1][j1]<>0));
+          if nzr then
+              j:=j+1;
+          fi;
+          if nzb then
+              i:=i+1;
+          fi;
+      od;
+      Add(bls,List([1..i],i1->rest[i1]{[1..j]}));
+      rest:=List([i+1..nr],i1->rest[i1]{[j+1..nc]});
+      nr:=nr-i;
+      nc:=nc-j;
+      i:=1; j:=1;
+  od;
+  return bls;
 
 end );
 
