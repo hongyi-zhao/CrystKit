@@ -1184,57 +1184,61 @@ EnantiomorphicPairOfSpaceGroup, function( S )
 end );
 
 
+# Add the function DirectSumDecompositionMatrix.
+# https://github.com/gap-packages/utils/issues/64#issuecomment-1591422710
 # Direct sum decomposition of a matrix.
 # https://mail.google.com/mail/u/0/?ogbl#sent/KtbxLwHHpRfqHzrslftpfCbXhvQJngJvxV
 # Dear forum,
 
 # This is a possible approach, inspired in
 # https://github.com/gap-packages/numericalsgps/blob/fcde379b01bd44b1fa80cd69d7ddd6a8acdcfe2f/gap/catenary-tame.gi#LL803C1-L831C4
-# Dear Zhao,
 
-# Try this. It should work even for non-square matrices.
 InstallGlobalFunction( 
 DirectSumDecompositionMatrix, function(l)
    
-    local nr,nc,i,j,nzr,nzb,rest,bls,nbls;
+  local nr,nc,i,j,nzr,nzb,rest,bls,nbls;
 
-    rest:=StructuralCopy(l);
-    nr:=Length(rest);
-    nc:=Length(rest[1]);
-    bls:=[];
-    i:=1;
-    j:=1;
-    while nr>0 and nc>0 do
-        nzr:=true;
-        nzb:=true;
-        while nzr or nzb do
-            nzr:=ForAny([1..i],i1->ForAny([j+1..nc],j1->rest[i1][j1]<>0));
-            nzb:=ForAny([i+1..nr],i1->ForAny([1..j],j1->rest[i1][j1]<>0));
-            if nzr then
-                j:=j+1;
-            fi;
-            if nzb then
-                i:=i+1;
-            fi;
-        od;
-        Add(bls,List([1..i],i1->rest[i1]{[1..j]}));
-        rest:=List([i+1..nr],i1->rest[i1]{[j+1..nc]});
-        nr:=nr-i;
-        nc:=nc-j;
-        i:=1; j:=1;
-    od;
+	if not(IsMatrix(l))  then
+		Error("The argument must be a matrix.");
+	fi;
+  rest:=StructuralCopy(l);
+  nr:=Length(rest);
+  nc:=Length(rest[1]);
+  bls:=[];
+  i:=1;
+  j:=1;
+  while nr>0 and nc>0 do
+      nzr:=true;
+      nzb:=true;
+      while nzr or nzb do
+          nzr:=ForAny([1..i],i1->ForAny([j+1..nc],j1-> not IsZero(rest[i1][j1])));
+          nzb:=ForAny([i+1..nr],i1->ForAny([1..j],j1-> not IsZero(rest[i1][j1])));
+          if nzr then
+              j:=j+1;
+          fi;
+          if nzb then
+              i:=i+1;
+          fi;
+      od;
+      Add(bls,List([1..i],i1->rest[i1]{[1..j]}));
+      rest:=List([i+1..nr],i1->rest[i1]{[j+1..nc]});
+      nr:=nr-i;
+      nc:=nc-j;
+      i:=1; j:=1;
+  od;
 
-    nbls:=Length(bls);
+  nbls:=Length(bls);
 
-    # check if we have filled all columns and rows
-    if nc>0 and nbls>0 then # add zeroes at the end of the last block
-        bls[nbls]:=List(bls[nbls], l->Concatenation(l,List([1..nc],_->0)));
-    fi;
+  # check if we have filled all columns and rows
+  if nc>0 and nbls>0 then # add zeroes at the end of the last block
+      bls[nbls]:=List(bls[nbls], l->Concatenation(l,ListWithIdenticalEntries(nc,0)));
+  fi;
 
-    if nr>0 and nbls>0 then # add zero rows at the end of the last block
-        bls[nbls]:=Concatenation(bls[nbls], List([1..nr],_->List([1..Length(bls[nbls])],_->0)));
-    fi;
+  if nr>0 and nbls>0 then # add zero rows at the end of the last block
+      bls[nbls]:=Concatenation(bls[nbls], ListWithIdenticalEntries(nr,ListWithIdenticalEntries(Length(bls[nbls]), 0)
+      ));
+  fi;
 
-    return bls;
+  return bls;
 
 end );
