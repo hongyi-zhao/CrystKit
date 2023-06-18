@@ -912,7 +912,8 @@ end );
 # 下面的算法在寻找 tmgs 方法也存在进一步改进和精细搜索的可能，比如：
 # 在找出tmgs后，如果当前的 长度仍然大于 b，则可以在 bound 到 Size( tmgs) - 1 
 # 的范围内进行tupgens的更彻底的搜索。
-# 但是，考虑到目前的结果合理性， Stefan在上面的评注以及进一步细化实现的不易。似乎并没有进一步处理的必要。
+# 但是，考虑到目前的结果合理性，Stefan在上面的评注以及进一步细化实现的不易。
+# 似乎并没有进一步处理的必要。
 InstallGlobalFunction( MinimalGeneratingSetAffineCrystGroup, function( S )
   local d, ntgens,  iso, epi, H, Hgens, sgs, bound, cmgs, sch, cmb,
         tupgens, tmgs, mgs, res, i, k, s, t, x;
