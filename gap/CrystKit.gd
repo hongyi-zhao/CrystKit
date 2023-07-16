@@ -20,7 +20,6 @@ DeclareGlobalFunction( "CaratName" );
 DeclareGlobalFunction( "CaratReverse_name" );
 DeclareGlobalFunction( "CaratQ_catalog" );
 
-
 DeclareGlobalFunction( "PhipnInverse" );
 DeclareGlobalFunction( "NewFiniteOrdersOfGLNZ" );
 DeclareGlobalFunction( "OrbitSpaceGroupStdByNormalizerPointGroup" );
@@ -36,3 +35,4 @@ DeclareGlobalFunction( "EnantiomorphicPairOfSpaceGroup" );
 
 DeclareGlobalFunction( "DirectSumDecompositionMatrix" );
 
+DeclareGlobalFunction( "LLLTranslationBasis" );

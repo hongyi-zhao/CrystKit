@@ -1243,3 +1243,67 @@ DirectSumDecompositionMatrix, function(l)
   return bls;
 
 end );
+
+
+#############################################################################
+##
+#F  LLLTranslationBasis( S ) . . . . . determine basis of translation lattice 
+# using LLLReducedBasis
+##
+LLLTranslationBasis := function ( S )
+
+    local d, P, Sgens, Pgens, trans, g, m, F, Fgens, rel, new,
+          lllrb, T1, T2, T;
+
+    if IsAffineCrystGroupOnRight( S ) then
+      T := TransposedMat(LLLTranslationBasis( TransposedMatrixGroup( S ) ));
+      return T;
+    fi;
+
+    d := DimensionOfMatrixGroup( S ) - 1;
+    P := PointGroup( S );
+    Pgens := [];
+    Sgens := [];
+    trans := [];
+
+    # first the obvious translations
+    for g in GeneratorsOfGroup( S ) do
+        m := g{[1..d]}{[1..d]};
+        if IsOne( m ) then
+            Add( trans, g{[1..d]}[d+1] );
+        else
+            Add( Sgens, g );
+            Add( Pgens, m );
+        fi;
+    od;
+
+    # then the hidden translations
+    if not IsTrivial( P ) then
+        F := Image( IsomorphismFpGroupByGenerators( P, Pgens ) );
+        Fgens := GeneratorsOfGroup( FreeGroupOfFpGroup( F ) );
+        for rel in RelatorsOfFpGroup( F ) do
+            new := MappedWord( rel, Fgens, Sgens );
+            Add( trans, new{[1..d]}[d+1] );
+        od;
+    fi;
+
+    # make translations invariant under point group
+    trans := Set( Union( Orbits( TransposedMatrixGroup(P), trans ) ) );
+
+    # return ReducedLatticeBasis( trans );
+
+    # 按列矢量形式的对应的格基变换：
+    # basis_lattice * TransposedMat(lllrb.transformation ) = TransposedMat(lllrb.basis);
+    trans:=Filtered(trans, x -> not IsZero(x));
+    lllrb:=LLLReducedBasis( trans, "linearcomb" );
+    T1:=TransposedMat(Filtered(TransposedMat(lllrb.transformation), x -> not IsZero(x)));
+
+    # T1 很奇怪。
+    # S:=SpaceGroupOnLeftIT(3,227);
+    # TransposedMat(lllrb.transformation)*trans=lllrb.basis;
+ 
+    T2:=lllrb.basis;
+    T:=TransposedMat(T1^-1*T2);
+    return T;
+
+end;
