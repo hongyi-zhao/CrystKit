@@ -1250,13 +1250,14 @@ end );
 #F  LLLTranslationBasis( S ) . . . . . determine basis of translation lattice 
 # using LLLReducedBasis
 ##
-LLLTranslationBasis := function ( S )
+InstallGlobalFunction( 
+LLLTranslationBasis, function ( S )
 
     local d, P, Sgens, Pgens, trans, g, m, F, Fgens, rel, new,
           lllrb, T1, T2, T;
 
     if IsAffineCrystGroupOnRight( S ) then
-      T := TransposedMat(LLLTranslationBasis( TransposedMatrixGroup( S ) ));
+      T := LLLTranslationBasis( TransposedMatrixGroup( S ) );
       return T;
     fi;
 
@@ -1287,23 +1288,22 @@ LLLTranslationBasis := function ( S )
         od;
     fi;
 
+    # 此时不使用下面的orbit操作，否则 T1 可能不是方阵。
     # make translations invariant under point group
-    trans := Set( Union( Orbits( TransposedMatrixGroup(P), trans ) ) );
+    # trans := Set( Union( Orbits( TransposedMatrixGroup(P), trans ) ) );
 
     # return ReducedLatticeBasis( trans );
 
     # 按列矢量形式的对应的格基变换：
     # basis_lattice * TransposedMat(lllrb.transformation ) = TransposedMat(lllrb.basis);
-    trans:=Filtered(trans, x -> not IsZero(x));
+    # trans:=Filtered(trans, x -> not IsZero(x));
     lllrb:=LLLReducedBasis( trans, "linearcomb" );
     T1:=TransposedMat(Filtered(TransposedMat(lllrb.transformation), x -> not IsZero(x)));
 
-    # T1 很奇怪。
-    # S:=SpaceGroupOnLeftIT(3,227);
     # TransposedMat(lllrb.transformation)*trans=lllrb.basis;
  
     T2:=lllrb.basis;
     T:=TransposedMat(T1^-1*T2);
     return T;
 
-end;
+end );
