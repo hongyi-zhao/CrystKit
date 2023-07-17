@@ -1367,8 +1367,8 @@ end );
 
 
 # 由此，可以分如下步骤，简化空间群的表示:
-# 1. 基于 LLLTranslationBasis 整数化点群（线性）部分，
-# 2. 基于 Theorem 43，有理化矢量系统，
+# 1. 转到标准表示，并基于 LLLTranslationBasis 进一步简化点群（线性）部分的表示，
+# 2. 基于 Theorem 43，有理化矢量系统。
 
 # 用下面的解决方法来首先彻底简化已给空间群的表示：
 InstallGlobalFunction( 
