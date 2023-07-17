@@ -36,3 +36,6 @@ DeclareGlobalFunction( "EnantiomorphicPairOfSpaceGroup" );
 DeclareGlobalFunction( "DirectSumDecompositionMatrix" );
 
 DeclareGlobalFunction( "LLLTranslationBasis" );
+
+DeclareGlobalFunction( "ReducedSpaceGroupRepresentation" );
+

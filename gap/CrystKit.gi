@@ -115,9 +115,8 @@ InstallGlobalFunction( CaratName, function( S )
 
   # `Name' is not able to perform calculations directly using proper cyclotomics. Therefore, a conversion process is carried out beforehand:
 
-  # 基于我写的函数转到标准表示，同时简化整数表示：
-  c:=LLLTranslationBasis(S);
-  C:=AugmentedMatrixOnLeft(c, 0 *[1..d]);
+  # 用下面的解决方法来首先彻底简化已给空间群的表示：
+  C:=ReducedSpaceGroupRepresentation(S); 
   S:=S^(C^-1);
 
   CaratWriteMatrixFile(Sgen, GeneratorsOfGroup( S ));
@@ -812,14 +811,12 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
     # S1^C1 = S1s
     # For matrices acting on the left, 对应于 cryst 的如下记号：
     # S1^(C1^-1) = S1s
-    c1 := LLLTranslationBasis( S1 );
-    C1    := AugmentedMatrixOnLeft( c1, 0*[1..d] );
+    C1    := ReducedSpaceGroupRepresentation( S1 );
     S1s := S1^(C1^-1);
     P1s := PointGroup( S1s );
 
     # S2^C2 = S2s
-    c2 := LLLTranslationBasis( S2 );
-    C2    := AugmentedMatrixOnLeft( c2, 0*[1..d] );
+    C2  := ReducedSpaceGroupRepresentation( S2 );
     S2s := S2^(C2^-1);
     P2s := PointGroup( S2s );
 
@@ -882,6 +879,7 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
         # Catch the case of a trivial point group in ConjugatorSpaceGroups 
         # https://github.com/gap-packages/cryst/commit/51f53da7de4f1e697d5dc7fa1fc687c1e2e43b23
         # return [C, C1, C2, C3, C4];
+        # Print(C); 
         return C;
       fi;
     od;
@@ -1313,3 +1311,52 @@ LLLTranslationBasis, function ( S )
     return T;
 
 end );
+
+
+# About the three classes translations related to a specific space group.
+# https://mail.google.com/mail/u/0/?ogbl#search/branton%40byu.edu+origin+shift+/QgrcJHsbjCgGxkTcpwdpcRTMdWjmWTPHncg
+
+# Some further discussions based on your lecture note "Group theory applied to crystallography" and some of your papers.
+# https://mail.google.com/mail/u/0/?ogbl#sent/KtbxLvHgMkZlGBgrVFcHgjClrgRRwWDdtg
+
+# Bernd Souvignier的 lecture note，page 27， Theorem 43:
+# https://www.math.ru.nl/~souvi/krist_09/cryst.pdf
+# The following theorem (which is not hard to prove) states that by an appropriate shift of the
+# origin, the coordinates of a SNoT become rational numbers with denominators at most the order
+# |P| of the point group.
+
+
+# 由此，可以分如下步骤，简化空间群的表示:
+# 1. 基于 LLLTranslationBasis 整数化点群（线性）部分，
+# 2. 基于 Theorem 43，有理化矢量系统，
+
+# 用下面的解决方法来首先彻底简化已给空间群的表示：
+InstallGlobalFunction( 
+ReducedSpaceGroupRepresentation, function( S )
+  local d, c1, C1, S1, P1, hom1, trans, v, C2,x, res;
+  
+  # 这样处理是否合适？
+  if IsAffineCrystGroupOnRight( S ) then
+    res := ReducedSpaceGroupRepresentation( TransposedMatrixGroup( S ) );
+    return TransposedMat(res) ^ -1;
+  fi;
+
+  d:=DimensionOfMatrixGroup(S) - 1;
+  c1:=LLLTranslationBasis(S);
+  C1:=AugmentedMatrixOnLeft(c1, 0*[1..d]);
+
+  S1:=S^(C1^-1);
+  P1:=PointGroup(S1);
+
+  if not ForAll(Flat(List(GeneratorsOfGroup(S1), x ->x{[1..d]}[d+1]) ), IsRat) then
+    hom1:=PointHomomorphism(S1);
+    trans:=List(P1, x -> PreImagesRepresentative(hom1, x) );
+    v:=Sum(List(trans, x -> x{[1..d]}[d+1]))/Order(P1);
+
+    C2:=AugmentedMatrixOnLeft(IdentityMat(d), v);
+    return C1 * C2;
+  else
+    return C1;
+  fi;
+end );
+
