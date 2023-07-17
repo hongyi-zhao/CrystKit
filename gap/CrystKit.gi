@@ -1250,69 +1250,107 @@ end );
 #############################################################################
 ##
 #F  LLLTranslationBasis( S ) . . . . . determine basis of translation lattice 
-# using LLLReducedBasis
+# using LLLReducedBasis 
 ##
+
+# 1. 似乎应该首先转到标准表示，再进行这里的简化处理。
+# 2. 采用LLLReducedBasis的方法不太好处理 lllrb.transformation 这部分。
+# 故改为基于 基于LLLReducedGramMat的方法
+# InstallGlobalFunction( 
+# LLLTranslationBasis, function ( S )
+
+#     local d, P, Sgens, Pgens, trans, g, m, F, Fgens, rel, new,
+#           lllrb, N, T1, T2, T;
+
+#     if IsAffineCrystGroupOnRight( S ) then
+#       T := LLLTranslationBasis( TransposedMatrixGroup( S ) );
+#       return T;
+#     fi;
+
+#     d := DimensionOfMatrixGroup( S ) - 1;
+#     P := PointGroup( S );
+#     Pgens := [];
+#     Sgens := [];
+#     trans := [];
+
+#     # first the obvious translations
+#     for g in GeneratorsOfGroup( S ) do
+#         m := g{[1..d]}{[1..d]};
+#         if IsOne( m ) then
+#             Add( trans, g{[1..d]}[d+1] );
+#         else
+#             Add( Sgens, g );
+#             Add( Pgens, m );
+#         fi;
+#     od;
+
+#     # then the hidden translations
+#     if not IsTrivial( P ) then
+#         F := Image( IsomorphismFpGroupByGenerators( P, Pgens ) );
+#         Fgens := GeneratorsOfGroup( FreeGroupOfFpGroup( F ) );
+#         for rel in RelatorsOfFpGroup( F ) do
+#             new := MappedWord( rel, Fgens, Sgens );
+#             Add( trans, new{[1..d]}[d+1] );
+#         od;
+#     fi;
+    
+#     # 似乎不用下面的处理，就可以保证最后的T能转到标准表示：
+#     # make translations invariant under point group
+#     # trans := Set( Union( Orbits( TransposedMatrixGroup(P), trans ) ) );
+
+#     # return ReducedLatticeBasis( trans );
+
+#     # 按列矢量形式的对应的格基变换：
+#     # basis_lattice * TransposedMat(lllrb.transformation ) = TransposedMat(lllrb.basis);
+#     lllrb:=LLLReducedBasis( trans, "linearcomb" );
+#     T1:=TransposedMat(Filtered(TransposedMat(lllrb.transformation), x -> not IsZero(x)));
+    
+#     # 即使不采用orbit 计算的处理，得到的T1 仍旧可能大于d维。
+#     # 但是，下面的处理的到底好不好，也不知道。
+#     # if Last(DimensionsMat(T1))>d then
+#     #   N := LinearIndependentColumns( T1 );
+#     #   T1 :=TransposedMat(TransposedMat(T1){N});
+#     # fi;
+
+#     # TransposedMat(lllrb.transformation)*trans=lllrb.basis;
+#     T2:=lllrb.basis;
+#     T:=TransposedMat(T1^-1*T2);
+
+#     # 确保 LLLTranslationBasis 可以转到标准表示。
+#     return T * TransposedMat(TranslationBasis(S^(AugmentedMatrixOnLeft(T, 0 *[1..d])^-1)));
+
+# end );
+
+
 InstallGlobalFunction( 
 LLLTranslationBasis, function ( S )
 
-    local d, P, Sgens, Pgens, trans, g, m, F, Fgens, rel, new,
-          lllrb, N, T1, T2, T;
+    local d, P, F, llg, T1, T2, T;
 
     if IsAffineCrystGroupOnRight( S ) then
       T := LLLTranslationBasis( TransposedMatrixGroup( S ) );
       return T;
     fi;
-
+    
     d := DimensionOfMatrixGroup( S ) - 1;
+    # note down the original base.
+    T1:= TransposedMat(InternalBasis(S));
+    # Then switch to the standard representation.
+    S := StandardAffineCrystGroup(S);
     P := PointGroup( S );
-    Pgens := [];
-    Sgens := [];
-    trans := [];
 
-    # first the obvious translations
-    for g in GeneratorsOfGroup( S ) do
-        m := g{[1..d]}{[1..d]};
-        if IsOne( m ) then
-            Add( trans, g{[1..d]}[d+1] );
-        else
-            Add( Sgens, g );
-            Add( Pgens, m );
-        fi;
-    od;
+    F:=Sum(List(P, g-> TransposedMat(g) * g ));
+    llg:=LLLReducedGramMat(F);
+    T2:=TransposedMat(llg.transformation);
+    
+    T:=T1*T2;
 
-    # then the hidden translations
-    if not IsTrivial( P ) then
-        F := Image( IsomorphismFpGroupByGenerators( P, Pgens ) );
-        Fgens := GeneratorsOfGroup( FreeGroupOfFpGroup( F ) );
-        for rel in RelatorsOfFpGroup( F ) do
-            new := MappedWord( rel, Fgens, Sgens );
-            Add( trans, new{[1..d]}[d+1] );
-        od;
-    fi;
-
-    # make translations invariant under point group
-    trans := Set( Union( Orbits( TransposedMatrixGroup(P), trans ) ) );
-
-    # return ReducedLatticeBasis( trans );
-
-    # 按列矢量形式的对应的格基变换：
-    # basis_lattice * TransposedMat(lllrb.transformation ) = TransposedMat(lllrb.basis);
-    lllrb:=LLLReducedBasis( trans, "linearcomb" );
-    T1:=TransposedMat(Filtered(TransposedMat(lllrb.transformation), x -> not IsZero(x)));
-
-    if Last(DimensionsMat(T1))>d then
-      N := LinearIndependentColumns( T1 );
-      T1 :=TransposedMat(TransposedMat(T1){N});
-    fi;
-
-    # TransposedMat(lllrb.transformation)*trans=lllrb.basis;
-    T2:=lllrb.basis;
-    T:=TransposedMat(T1^-1*T2);
-
-    # 确保 LLLTranslationBasis 可以转到标准表示。
-    return T * TransposedMat(TranslationBasis(S^(AugmentedMatrixOnLeft(T, 0 *[1..d])^-1)));
+    # Ensure the transformation matrix obtained can be used to converted to standard representation.
+    # return T * TransposedMat(TranslationBasis(S^(AugmentedMatrixOnLeft(T, 0 *[1..d])^-1)));
+    return T;
 
 end );
+
 
 
 # About the three classes translations related to a specific space group.
