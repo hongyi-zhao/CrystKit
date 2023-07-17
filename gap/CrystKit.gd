@@ -37,5 +37,5 @@ DeclareGlobalFunction( "DirectSumDecompositionMatrix" );
 
 DeclareGlobalFunction( "LLLTranslationBasis" );
 
-DeclareGlobalFunction( "ReducedSpaceGroupRepresentation" );
+DeclareGlobalFunction( "ConjugatorReducedSpaceGroup" );
 

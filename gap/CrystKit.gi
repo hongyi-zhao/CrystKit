@@ -116,7 +116,7 @@ InstallGlobalFunction( CaratName, function( S )
   # `Name' is not able to perform calculations directly using proper cyclotomics. Therefore, a conversion process is carried out beforehand:
 
   # 用下面的解决方法来首先彻底简化已给空间群的表示：
-  C:=ReducedSpaceGroupRepresentation(S); 
+  C:=ConjugatorReducedSpaceGroup(S); 
   S:=S^(C^-1);
 
   CaratWriteMatrixFile(Sgen, GeneratorsOfGroup( S ));
@@ -811,12 +811,12 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
     # S1^C1 = S1s
     # For matrices acting on the left, 对应于 cryst 的如下记号：
     # S1^(C1^-1) = S1s
-    C1    := ReducedSpaceGroupRepresentation( S1 );
+    C1    := ConjugatorReducedSpaceGroup( S1 );
     S1s := S1^(C1^-1);
     P1s := PointGroup( S1s );
 
     # S2^C2 = S2s
-    C2  := ReducedSpaceGroupRepresentation( S2 );
+    C2  := ConjugatorReducedSpaceGroup( S2 );
     S2s := S2^(C2^-1);
     P2s := PointGroup( S2s );
 
@@ -1308,7 +1308,9 @@ LLLTranslationBasis, function ( S )
     # TransposedMat(lllrb.transformation)*trans=lllrb.basis;
     T2:=lllrb.basis;
     T:=TransposedMat(T1^-1*T2);
-    return T;
+
+    # 确保 LLLTranslationBasis 可以转到标准表示。
+    return T * TransposedMat(TranslationBasis(S^(AugmentedMatrixOnLeft(T, 0 *[1..d])^-1)));
 
 end );
 
@@ -1332,31 +1334,31 @@ end );
 
 # 用下面的解决方法来首先彻底简化已给空间群的表示：
 InstallGlobalFunction( 
-ReducedSpaceGroupRepresentation, function( S )
-  local d, c1, C1, S1, P1, hom1, trans, v, C2,x, res;
+ConjugatorReducedSpaceGroup, function( S )
+  local d, C, P, hom, trans, v, x;
   
   # 这样处理是否合适？
   if IsAffineCrystGroupOnRight( S ) then
-    res := ReducedSpaceGroupRepresentation( TransposedMatrixGroup( S ) );
-    return TransposedMat(res) ^ -1;
+    C := ConjugatorReducedSpaceGroup( TransposedMatrixGroup( S ) );
+    return TransposedMat(C) ^ -1;
   fi;
 
   d:=DimensionOfMatrixGroup(S) - 1;
-  c1:=LLLTranslationBasis(S);
-  C1:=AugmentedMatrixOnLeft(c1, 0*[1..d]);
+  C:=AugmentedMatrixOnLeft(LLLTranslationBasis(S), 0*[1..d]);
 
-  S1:=S^(C1^-1);
-  P1:=PointGroup(S1);
+  S:=S^(C^-1);
+  P:=PointGroup(S);
 
-  if not ForAll(Flat(List(GeneratorsOfGroup(S1), x ->x{[1..d]}[d+1]) ), IsRat) then
-    hom1:=PointHomomorphism(S1);
-    trans:=List(P1, x -> PreImagesRepresentative(hom1, x) );
-    v:=Sum(List(trans, x -> x{[1..d]}[d+1]))/Order(P1);
+  if not ForAll(Flat(List(GeneratorsOfGroup(S), x ->x{[1..d]}[d+1]) ), IsRat) then
+    hom:=PointHomomorphism(S);
+    trans:=List(P, x -> PreImagesRepresentative(hom, x) );
+    v:=Sum(List(trans, x -> x{[1..d]}[d+1]))/Size(trans);
 
-    C2:=AugmentedMatrixOnLeft(IdentityMat(d), v);
-    return C1 * C2;
-  else
-    return C1;
+    C:=C * AugmentedMatrixOnLeft(IdentityMat(d), v);
+
   fi;
+
+  return C;
+
 end );
 
