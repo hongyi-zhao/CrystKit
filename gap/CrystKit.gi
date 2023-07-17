@@ -85,7 +85,7 @@ end );
 ##
 InstallGlobalFunction( CaratName, function( S )
   
-  local Str, Sgen, out,
+  local Str, Sgen, out, c, C,
         dir, shell, d, cmd, program, cs, args, 
         _in, _out, res, err, x; 
 
@@ -114,9 +114,12 @@ InstallGlobalFunction( CaratName, function( S )
   fi;
 
   # `Name' is not able to perform calculations directly using proper cyclotomics. Therefore, a conversion process is carried out beforehand:
-  if not IsStandardSpaceGroup( S ) then
-    S := StandardAffineCrystGroup( S ); 
-  fi;
+
+  # 基于我写的函数转到标准表示，同时简化整数表示：
+  c:=LLLTranslationBasis(S);
+  C:=AugmentedMatrixOnLeft(c, 0 *[1..d]);
+  S:=S^(C^-1);
+
   CaratWriteMatrixFile(Sgen, GeneratorsOfGroup( S ));
   # CaratShowFile(Sgen);
 
@@ -270,6 +273,7 @@ InstallGlobalFunction( CaratQ_catalog, function( str, out )
     fi;
 
 end );
+
 
 InstallGlobalFunction( 
 IdentifySpaceGroup, function( S )
@@ -808,16 +812,16 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
     # S1^C1 = S1s
     # For matrices acting on the left, 对应于 cryst 的如下记号：
     # S1^(C1^-1) = S1s
-    S1s := StandardAffineCrystGroup(S1);
-    P1s := PointGroup( S1s );
-    c1 := TransposedMat(InternalBasis( S1 ));
+    c1 := LLLTranslationBasis( S1 );
     C1    := AugmentedMatrixOnLeft( c1, 0*[1..d] );
+    S1s := S1^(C1^-1);
+    P1s := PointGroup( S1s );
 
     # S2^C2 = S2s
-    S2s := StandardAffineCrystGroup(S2);
-    P2s := PointGroup( S2s );
-    c2 := TransposedMat(InternalBasis( S2 ));
+    c2 := LLLTranslationBasis( S2 );
     C2    := AugmentedMatrixOnLeft( c2, 0*[1..d] );
+    S2s := S2^(C2^-1);
+    P2s := PointGroup( S2s );
 
     # P1s^c3 = P2s; 
     # Check whether S1 and S2 belong to the same Z-class:
@@ -1254,7 +1258,7 @@ InstallGlobalFunction(
 LLLTranslationBasis, function ( S )
 
     local d, P, Sgens, Pgens, trans, g, m, F, Fgens, rel, new,
-          lllrb, T1, T2, T;
+          lllrb, N, T1, T2, T;
 
     if IsAffineCrystGroupOnRight( S ) then
       T := LLLTranslationBasis( TransposedMatrixGroup( S ) );
@@ -1288,20 +1292,22 @@ LLLTranslationBasis, function ( S )
         od;
     fi;
 
-    # 此时不使用下面的orbit操作，否则 T1 可能不是方阵。
     # make translations invariant under point group
-    # trans := Set( Union( Orbits( TransposedMatrixGroup(P), trans ) ) );
+    trans := Set( Union( Orbits( TransposedMatrixGroup(P), trans ) ) );
 
     # return ReducedLatticeBasis( trans );
 
     # 按列矢量形式的对应的格基变换：
     # basis_lattice * TransposedMat(lllrb.transformation ) = TransposedMat(lllrb.basis);
-    # trans:=Filtered(trans, x -> not IsZero(x));
     lllrb:=LLLReducedBasis( trans, "linearcomb" );
     T1:=TransposedMat(Filtered(TransposedMat(lllrb.transformation), x -> not IsZero(x)));
 
+    if Last(DimensionsMat(T1))>d then
+      N := LinearIndependentColumns( T1 );
+      T1 :=TransposedMat(TransposedMat(T1){N});
+    fi;
+
     # TransposedMat(lllrb.transformation)*trans=lllrb.basis;
- 
     T2:=lllrb.basis;
     T:=TransposedMat(T1^-1*T2);
     return T;
