@@ -1255,9 +1255,9 @@ end );
 # using LLLReducedBasis 
 ##
 
-# 1. 似乎应该首先转到标准表示，再进行这里的简化处理。
-# 2. 采用LLLReducedBasis的方法不太好处理 lllrb.transformation 这部分。
-# 故改为基于 基于LLLReducedGramMat的方法
+# 1. 采用LLLReducedBasis的方法不太好处理 lllrb.transformation 这部分。
+# 2. 基于LLLReducedGramMat的方法, 若首先转到标准表示，再进行这里的简化处理，则可以保证结果仍是标准表示，便于后续进一步简化矢量系统。
+# 故改为基于LLReducedGramMat的方法
 # InstallGlobalFunction( 
 # LLLTranslationBasis, function ( S )
 
@@ -1324,24 +1324,6 @@ end );
 # end );
 
 
-# InstallGlobalFunction( 
-# LLLTranslationBasis, function ( S )
-
-#     local d, P, F, llg, c1, c2, C;
-
-#     d := DimensionOfMatrixGroup( S ) - 1;
-#     c1:= TransposedMat(InternalBasis(S));
-#     F:=Sum(List(PointGroup( StandardAffineCrystGroup(S) ), g-> TransposedMat(g) * g ));
-#     llg:=LLLReducedGramMat(F);
-#     c2:=TransposedMat(llg.transformation);
-  
-#     C:=AugmentedMatrixOnLeft(c1 *c2, 0*[1..d]);
-#     return C; 
-
-# end );
-
-
-
 # About the three classes translations related to a specific space group.
 # https://mail.google.com/mail/u/0/?ogbl#search/branton%40byu.edu+origin+shift+/QgrcJHsbjCgGxkTcpwdpcRTMdWjmWTPHncg
 
@@ -1375,7 +1357,11 @@ ConjugatorReducedSpaceGroup, function( S )
 
   d:=DimensionOfMatrixGroup(S) - 1;
   c1:= TransposedMat(InternalBasis(S));
-  F:=Sum(List(PointGroup( StandardAffineCrystGroup(S) ), g-> TransposedMat(g) * g ));
+  F:=Sum(PointGroup( StandardAffineCrystGroup(S) ), g-> TransposedMat(g) * g );
+  # g ^ T * E * g
+  # 变换后成为：
+  # c = llg.transformation
+  # g ^ T * c ^T  * c * g 
   llg:=LLLReducedGramMat(F);
   c2:=TransposedMat(llg.transformation);
 
@@ -1387,8 +1373,8 @@ ConjugatorReducedSpaceGroup, function( S )
   if not ForAll(Flat(List(GeneratorsOfGroup(S), x ->x{[1..d]}[d+1]) ), IsRat) then
 
     hom:=PointHomomorphism(S);
-    trans:=List(P, x -> PreImagesRepresentative(hom, x) );
-    v:=Sum(List(trans, x -> x{[1..d]}[d+1]))/Size(trans);
+    trans:=List(P, x -> PreImagesRepresentative(hom, x){[1..d]}[d+1] );
+    v:=Sum(trans)/Size(trans);
     C:=C * AugmentedMatrixOnLeft(IdentityMat(d), v);
 
   fi;

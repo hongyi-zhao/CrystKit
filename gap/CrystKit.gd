@@ -1,4 +1,6 @@
 DeclareGlobalFunction( "AugmentedMatrixOnLeft" );
+DeclareGlobalFunction( "DirectSumDecompositionMatrix" );
+DeclareGlobalFunction( "ConjugatorMatrixGroups" );
 DeclareGlobalFunction( "IdentifyGroupGenerators" );
 
 #############################################################################
@@ -22,15 +24,12 @@ DeclareGlobalFunction( "CaratQ_catalog" );
 
 DeclareGlobalFunction( "PhipnInverse" );
 DeclareGlobalFunction( "NewFiniteOrdersOfGLNZ" );
+
+DeclareGlobalFunction( "ConjugatorReducedSpaceGroup" );
 DeclareGlobalFunction( "OrbitSpaceGroupStdByNormalizerPointGroup" );
 DeclareGlobalFunction( "OrbitSpaceGroupStdByCollectEquivExtensions" );
-
 DeclareGlobalFunction( "AffineIsomorphismSpaceGroups" );
-DeclareGlobalFunction( "IdentifySpaceGroup" );
-DeclareGlobalFunction( "MinimalGeneratingSetAffineCrystGroup" );
-
-DeclareGlobalFunction( "ConjugatorMatrixGroups" );
 DeclareGlobalFunction( "EnantiomorphicPairOfSpaceGroup" );
-DeclareGlobalFunction( "DirectSumDecompositionMatrix" );
-DeclareGlobalFunction( "ConjugatorReducedSpaceGroup" );
+DeclareGlobalFunction( "IdentifySpaceGroup" );
 
+DeclareGlobalFunction( "MinimalGeneratingSetAffineCrystGroup" );
