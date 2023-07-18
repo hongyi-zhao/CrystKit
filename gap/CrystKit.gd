@@ -29,13 +29,8 @@ DeclareGlobalFunction( "AffineIsomorphismSpaceGroups" );
 DeclareGlobalFunction( "IdentifySpaceGroup" );
 DeclareGlobalFunction( "MinimalGeneratingSetAffineCrystGroup" );
 
-
 DeclareGlobalFunction( "ConjugatorMatrixGroups" );
 DeclareGlobalFunction( "EnantiomorphicPairOfSpaceGroup" );
-
 DeclareGlobalFunction( "DirectSumDecompositionMatrix" );
-
-DeclareGlobalFunction( "LLLTranslationBasis" );
-
 DeclareGlobalFunction( "ConjugatorReducedSpaceGroup" );
 

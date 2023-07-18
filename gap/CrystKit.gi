@@ -1083,6 +1083,8 @@ ConjugatorMatrixGroups, function( G1, G2 )
 end );
 
 
+# Enantiomorphism of crystallographic groups in higher dimensions with results in dimensions up to 6
+# https://scripts.iucr.org/cgi-bin/paper?S0108767303004161
 InstallGlobalFunction( 
 EnantiomorphicPairOfSpaceGroup, function( S )
   local d, trT, P, Pgen, N, norm, diag, C, res,
@@ -1296,7 +1298,7 @@ end );
     
 #     # 似乎不用下面的处理，就可以保证最后的T能转到标准表示：
 #     # make translations invariant under point group
-#     # trans := Set( Union( Orbits( TransposedMatrixGroup(P), trans ) ) );
+#     trans := Set( Union( Orbits( TransposedMatrixGroup(P), trans ) ) );
 
 #     # return ReducedLatticeBasis( trans );
 
@@ -1322,34 +1324,21 @@ end );
 # end );
 
 
-InstallGlobalFunction( 
-LLLTranslationBasis, function ( S )
+# InstallGlobalFunction( 
+# LLLTranslationBasis, function ( S )
 
-    local d, P, F, llg, T1, T2, T;
+#     local d, P, F, llg, c1, c2, C;
 
-    if IsAffineCrystGroupOnRight( S ) then
-      T := LLLTranslationBasis( TransposedMatrixGroup( S ) );
-      return T;
-    fi;
-    
-    d := DimensionOfMatrixGroup( S ) - 1;
-    # note down the original base.
-    T1:= TransposedMat(InternalBasis(S));
-    # Then switch to the standard representation.
-    S := StandardAffineCrystGroup(S);
-    P := PointGroup( S );
+#     d := DimensionOfMatrixGroup( S ) - 1;
+#     c1:= TransposedMat(InternalBasis(S));
+#     F:=Sum(List(PointGroup( StandardAffineCrystGroup(S) ), g-> TransposedMat(g) * g ));
+#     llg:=LLLReducedGramMat(F);
+#     c2:=TransposedMat(llg.transformation);
+  
+#     C:=AugmentedMatrixOnLeft(c1 *c2, 0*[1..d]);
+#     return C; 
 
-    F:=Sum(List(P, g-> TransposedMat(g) * g ));
-    llg:=LLLReducedGramMat(F);
-    T2:=TransposedMat(llg.transformation);
-    
-    T:=T1*T2;
-
-    # Ensure the transformation matrix obtained can be used to converted to standard representation.
-    # return T * TransposedMat(TranslationBasis(S^(AugmentedMatrixOnLeft(T, 0 *[1..d])^-1)));
-    return T;
-
-end );
+# end );
 
 
 
@@ -1373,25 +1362,33 @@ end );
 # 用下面的解决方法来首先彻底简化已给空间群的表示：
 InstallGlobalFunction( 
 ConjugatorReducedSpaceGroup, function( S )
-  local d, C, P, hom, trans, v, x;
+  local d,  P, hom, trans, v, x,
+        F, llg, c1, c2, C;
   
-  # 这样处理是否合适？
   if IsAffineCrystGroupOnRight( S ) then
     C := ConjugatorReducedSpaceGroup( TransposedMatrixGroup( S ) );
+    # 参考 InternalBasis 中的相关实现，可知，应该如下处理，
+    # 或者只需要转置？
+    # 关于形式上的统一，仍需要思考。
     return TransposedMat(C) ^ -1;
   fi;
 
   d:=DimensionOfMatrixGroup(S) - 1;
-  C:=AugmentedMatrixOnLeft(LLLTranslationBasis(S), 0*[1..d]);
+  c1:= TransposedMat(InternalBasis(S));
+  F:=Sum(List(PointGroup( StandardAffineCrystGroup(S) ), g-> TransposedMat(g) * g ));
+  llg:=LLLReducedGramMat(F);
+  c2:=TransposedMat(llg.transformation);
+
+  C:=AugmentedMatrixOnLeft(c1 *c2, 0*[1..d]);
 
   S:=S^(C^-1);
   P:=PointGroup(S);
 
   if not ForAll(Flat(List(GeneratorsOfGroup(S), x ->x{[1..d]}[d+1]) ), IsRat) then
+
     hom:=PointHomomorphism(S);
     trans:=List(P, x -> PreImagesRepresentative(hom, x) );
     v:=Sum(List(trans, x -> x{[1..d]}[d+1]))/Size(trans);
-
     C:=C * AugmentedMatrixOnLeft(IdentityMat(d), v);
 
   fi;
