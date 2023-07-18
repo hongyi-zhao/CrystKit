@@ -1249,81 +1249,6 @@ DirectSumDecompositionMatrix, function(l)
 end );
 
 
-#############################################################################
-##
-#F  LLLTranslationBasis( S ) . . . . . determine basis of translation lattice 
-# using LLLReducedBasis 
-##
-
-# 1. 采用LLLReducedBasis的方法不太好处理 lllrb.transformation 这部分。
-# 2. 基于LLLReducedGramMat的方法, 若首先转到标准表示，再进行这里的简化处理，则可以保证结果仍是标准表示，便于后续进一步简化矢量系统。
-# 故改为基于LLReducedGramMat的方法
-# InstallGlobalFunction( 
-# LLLTranslationBasis, function ( S )
-
-#     local d, P, Sgens, Pgens, trans, g, m, F, Fgens, rel, new,
-#           lllrb, N, T1, T2, T;
-
-#     if IsAffineCrystGroupOnRight( S ) then
-#       T := LLLTranslationBasis( TransposedMatrixGroup( S ) );
-#       return T;
-#     fi;
-
-#     d := DimensionOfMatrixGroup( S ) - 1;
-#     P := PointGroup( S );
-#     Pgens := [];
-#     Sgens := [];
-#     trans := [];
-
-#     # first the obvious translations
-#     for g in GeneratorsOfGroup( S ) do
-#         m := g{[1..d]}{[1..d]};
-#         if IsOne( m ) then
-#             Add( trans, g{[1..d]}[d+1] );
-#         else
-#             Add( Sgens, g );
-#             Add( Pgens, m );
-#         fi;
-#     od;
-
-#     # then the hidden translations
-#     if not IsTrivial( P ) then
-#         F := Image( IsomorphismFpGroupByGenerators( P, Pgens ) );
-#         Fgens := GeneratorsOfGroup( FreeGroupOfFpGroup( F ) );
-#         for rel in RelatorsOfFpGroup( F ) do
-#             new := MappedWord( rel, Fgens, Sgens );
-#             Add( trans, new{[1..d]}[d+1] );
-#         od;
-#     fi;
-    
-#     # 似乎不用下面的处理，就可以保证最后的T能转到标准表示：
-#     # make translations invariant under point group
-#     trans := Set( Union( Orbits( TransposedMatrixGroup(P), trans ) ) );
-
-#     # return ReducedLatticeBasis( trans );
-
-#     # 按列矢量形式的对应的格基变换：
-#     # basis_lattice * TransposedMat(lllrb.transformation ) = TransposedMat(lllrb.basis);
-#     lllrb:=LLLReducedBasis( trans, "linearcomb" );
-#     T1:=TransposedMat(Filtered(TransposedMat(lllrb.transformation), x -> not IsZero(x)));
-    
-#     # 即使不采用orbit 计算的处理，得到的T1 仍旧可能大于d维。
-#     # 但是，下面的处理的到底好不好，也不知道。
-#     # if Last(DimensionsMat(T1))>d then
-#     #   N := LinearIndependentColumns( T1 );
-#     #   T1 :=TransposedMat(TransposedMat(T1){N});
-#     # fi;
-
-#     # TransposedMat(lllrb.transformation)*trans=lllrb.basis;
-#     T2:=lllrb.basis;
-#     T:=TransposedMat(T1^-1*T2);
-
-#     # 确保 LLLTranslationBasis 可以转到标准表示。
-#     return T * TransposedMat(TranslationBasis(S^(AugmentedMatrixOnLeft(T, 0 *[1..d])^-1)));
-
-# end );
-
-
 # About the three classes translations related to a specific space group.
 # https://mail.google.com/mail/u/0/?ogbl#search/branton%40byu.edu+origin+shift+/QgrcJHsbjCgGxkTcpwdpcRTMdWjmWTPHncg
 
@@ -1336,10 +1261,12 @@ end );
 # origin, the coordinates of a SNoT become rational numbers with denominators at most the order
 # |P| of the point group.
 
+# 简化空间群的表示的相关思路说明:
+# 1. 采用LLLReducedBasis的方法不太好处理 lllrb.transformation 这部分。此法得到的转换矩阵，即使初始的S为标准表示，并不能保证结果仍为标准表示。
+# 2. 若首先转到标准表示，再进行基于LLLReducedGramMat的简化方法,则可以保证结果仍是标准表示，便于后续进一步简化矢量系统。
+# 故改为基于LLReducedGramMat的方法
 
-# 由此，可以分如下步骤，简化空间群的表示:
-# 1. 转到标准表示，并基于 LLLTranslationBasis 进一步简化点群（线性）部分的表示，
-# 2. 基于 Theorem 43，有理化矢量系统。
+# 3. 基于 Theorem 43，有理化矢量系统。
 
 # 用下面的解决方法来首先彻底简化已给空间群的表示：
 InstallGlobalFunction( 
