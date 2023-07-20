@@ -1297,10 +1297,12 @@ ConjugatorReducedSpaceGroup, function( S )
   S:=S^(C^-1);
   P:=PointGroup(S);
 
-  if not ForAll(Flat(List(GeneratorsOfGroup(S), x ->x{[1..d]}[d+1]) ), IsRat) then
+  hom:=PointHomomorphism(S);
+  trans:=List(P, x -> PreImagesRepresentative(hom, x){[1..d]}[d+1] );
 
-    hom:=PointHomomorphism(S);
-    trans:=List(P, x -> PreImagesRepresentative(hom, x){[1..d]}[d+1] );
+  if not ForAll(Flat(trans), IsRat) or 
+     Maximum(List(List(Flat(trans), FractionModOne), DenominatorRat)) > Size(trans) then
+
     v:=Sum(trans)/Size(trans);
     C:=C * AugmentedMatrixOnLeft(IdentityMat(d), v);
 
