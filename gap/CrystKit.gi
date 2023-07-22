@@ -792,7 +792,10 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
         if C = fail then
             return fail;
         else
-            return TransposedMat( C )^-1;
+            # 通过对应的 ^ 定义使用时 
+            # 为了像 ConjugatorSpaceGroups 一样对左右作用保持通用的共轭形式，
+            # 需要使用下面的形式
+            return TransposedMat( C );
         fi;
       fi;
     fi;
@@ -1017,7 +1020,8 @@ InstallGlobalFunction( MinimalGeneratingSetAffineCrystGroup, function( S )
 
 end );
 
-
+# Todo:
+# 基于 DoubleCosetRepsAndSizes 的改进。
 InstallGlobalFunction( 
 ConjugatorMatrixGroups, function( G1, G2 )
 
