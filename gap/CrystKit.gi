@@ -113,10 +113,8 @@ InstallGlobalFunction( CaratName, function( S )
     return fail;
   fi;
 
-  # `Name' is not able to perform calculations directly using proper cyclotomics. Therefore, a conversion process is carried out beforehand:
-
-  # 用下面的解决方法来首先彻底简化已给空间群的表示：
-  C:=ConjugatorReducedSpaceGroup(S); 
+  # 再调用 CARAT 的相关程序之前，首先用下面的方法来彻底简化已给空间群的表示：
+  C:=ConjugatorReducedSpaceGroup(S);
   S:=S^(C^-1);
 
   CaratWriteMatrixFile(Sgen, GeneratorsOfGroup( S ));
@@ -284,7 +282,7 @@ IdentifySpaceGroup, function( S )
     # 此时的进一步递归处理：
     res := IdentifySpaceGroup( S );
     if res <> fail then
-      res[2] := TransposedMat(res[2]) ^-1;
+      res[2] := TransposedMat(res[2]);
     fi;
     return res;
   fi;
@@ -1280,10 +1278,7 @@ ConjugatorReducedSpaceGroup, function( S )
   
   if IsAffineCrystGroupOnRight( S ) then
     C := ConjugatorReducedSpaceGroup( TransposedMatrixGroup( S ) );
-    # 参考 InternalBasis 中的相关实现，可知，应该如下处理，
-    # 或者只需要转置？
-    # 关于形式上的统一，仍需要思考。
-    return TransposedMat(C) ^ -1;
+    return TransposedMat(C);
   fi;
 
   d:=DimensionOfMatrixGroup(S) - 1;
