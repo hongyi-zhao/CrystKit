@@ -1274,7 +1274,7 @@ end );
 InstallGlobalFunction( 
 ConjugatorReducedSpaceGroup, function( S )
   local d,  P, hom, trans, v, x,
-        F, llg, c1, c2, C;
+        F, llg, c, C;
   
   if IsAffineCrystGroupOnRight( S ) then
     C := ConjugatorReducedSpaceGroup( TransposedMatrixGroup( S ) );
@@ -1282,16 +1282,27 @@ ConjugatorReducedSpaceGroup, function( S )
   fi;
 
   d:=DimensionOfMatrixGroup(S) - 1;
-  c1:= TransposedMat(InternalBasis(S));
+  c:= TransposedMat(InternalBasis(S));
   F:=Sum(PointGroup( StandardAffineCrystGroup(S) ), g-> TransposedMat(g) * g );
-  # g ^ T * E * g
-  # 变换后成为：
-  # c = llg.transformation
-  # g ^ T * c ^T  * c * g 
-  llg:=LLLReducedGramMat(F);
-  c2:=TransposedMat(llg.transformation);
 
-  C:=AugmentedMatrixOnLeft(c1 *c2, 0*[1..d]);
+  # relations  is  a  basis  of  the  space  of vectors (x_1, x_2, ..., x_n) such that ∑_{i = 1}^n x_i b_i is zero, and transformation gives the expression of the new
+  # lattice basis in terms of the old, i.e., transformation is the matrix T such that T ⋅ G ⋅ T^tr is the remainder component of the result.
+
+  # 结合上面的算法文档描述，根据如何定义G，来决定T对原基B的作用方式：
+  # 1. G:=B . B ^tr
+  #    T ⋅ G ⋅ T^tr = T . B . B ^tr . T^tr = T .B (T .B) ^tr
+  #    故此时，change-of-baisi 为 T 从左侧作用于 B
+  # 2. G:=B ^ tr . B
+  #    T ⋅ G ⋅ T^tr = T . B ^ tr . B . T^tr = (B . T ^ tr) ^tr . B . T^tr 
+  #    故此时，change-of-baisi 为 T ^ tr 从右侧作用于 B
+
+  llg:=LLLReducedGramMat(F);
+  
+  if not IsOne( llg.transformation ) then
+    c:=c * TransposedMat(llg.transformation);
+  fi;
+
+  C:=AugmentedMatrixOnLeft(c, 0*[1..d]);
 
   S:=S^(C^-1);
   P:=PointGroup(S);
