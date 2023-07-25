@@ -1327,7 +1327,7 @@ ConjugatorReducedSpaceGroup, function( S )
 
   if DeterminantMat(C) < 0 then
     reflection:=DiagonalMat(Concatenation([-1],List([1..d], x -> 1)));
-    # 改变C的第一列的符号，和将其视为列矢量矩阵对应：
+    # 将C其视为列矢量矩阵，右乘 reflection，和改变C的第一列的符号（即第一个基矢量）对应：
     C:=C * reflection;
   fi;
 
