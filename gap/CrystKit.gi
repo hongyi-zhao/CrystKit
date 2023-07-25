@@ -1090,7 +1090,7 @@ end );
 # https://scripts.iucr.org/cgi-bin/paper?S0108767303004161
 InstallGlobalFunction( 
 EnantiomorphicPairOfSpaceGroup, function( S )
-  local d, P, Pgen, N, norm, diag, CR, C,
+  local d, P, Pgen, N, norm, reflection, CR, C,
         A, B, z, Ugen, orbnpg, orbnpg_posi, i, x;
 
   if IsAffineCrystGroupOnRight( S ) then
@@ -1121,8 +1121,7 @@ EnantiomorphicPairOfSpaceGroup, function( S )
   # https://github.com/gap-packages/cryst/issues/23#issuecomment-844364463
   AddSet(norm, IdentityMat(d));
  
-  diag:=List( [1..d+1], i -> 1 );
-  diag[1]:=-1;
+  reflection:=DiagonalMat(Concatenation([-1],List([1..d], x -> 1)));
   
   C:=fail;
  
@@ -1130,7 +1129,7 @@ EnantiomorphicPairOfSpaceGroup, function( S )
     if ForAll(norm, x -> DeterminantMat(x)=1) then
       # Print("case 1: ", i, "\n");
       # The conjugator to get the enantiomorphic partner
-      C:=DiagonalMat(diag);
+      C:=reflection;
     else
   
       A:=Filtered(norm, x -> DeterminantMat(x)=1);
@@ -1172,7 +1171,7 @@ EnantiomorphicPairOfSpaceGroup, function( S )
   fi;
 
   if C <> fail then 
-    C:= C^(AugmentedMatrixOnLeft(CR, 0*[1..d])^-1);
+    C:= CR * C;
   fi;
   
   return C;
@@ -1263,15 +1262,19 @@ end );
 InstallGlobalFunction( 
 ConjugatorReducedSpaceGroup, function( S )
   local d,  P, hom, trans, v, x,
-        F, llg, c, C;
+        F, llg, c, C, reflection,
+        # For debug
+        det;
   
   if IsAffineCrystGroupOnRight( S ) then
     C := ConjugatorReducedSpaceGroup( TransposedMatrixGroup( S ) );
     return TransposedMat(C);
   fi;
 
+  det:=[];
   d:=DimensionOfMatrixGroup(S) - 1;
   c:= TransposedMat(InternalBasis(S));
+  Add(det, DeterminantMat(c));
   F:=Sum(PointGroup( StandardAffineCrystGroup(S) ), g-> TransposedMat(g) * g );
 
   # relations  is  a  basis  of  the  space  of vectors (x_1, x_2, ..., x_n) such that ∑_{i = 1}^n x_i b_i is zero, and transformation gives the expression of the new
@@ -1289,6 +1292,7 @@ ConjugatorReducedSpaceGroup, function( S )
   
   if not IsOne( llg.transformation ) then
     c:=c * TransposedMat(llg.transformation);
+    Add(det, DeterminantMat(llg.transformation));
   fi;
 
   C:=AugmentedMatrixOnLeft(c, 0*[1..d]);
@@ -1305,6 +1309,26 @@ ConjugatorReducedSpaceGroup, function( S )
     v:=Sum(trans)/Size(trans);
     C:=C * AugmentedMatrixOnLeft(IdentityMat(d), v);
 
+  fi;
+
+  # 保手性测试
+  # return [C, det];
+  
+  # https://mail.google.com/mail/u/0/?ogbl#search/enantiomorphic+pair+conjugator/QgrcJHrtvXrNdzwRxSLnPpGBpgpLbrmxVnb
+  #   To have a standard orientation-reversing operation in arbitrary
+  # dimension, one would indeed take a transformation with an odd number of
+  # elements -1 and the rest 1, but the simplest odd number is 1, so one
+  # would take a matrix with just one -1 and the rest 1, this is simply a
+  # reflection.
+
+  # 确保返回一个保手性不变的conjugator，
+  # 实际上，似乎 InternalBasis / TranslationBasis 所使用的算法总是保手性的，因此，只需要在 llg.transformation 上做如下处理即可，
+  # 但是，为了保险起见，下面的方法也可以：
+
+  if DeterminantMat(C) < 0 then
+    reflection:=DiagonalMat(Concatenation([-1],List([1..d], x -> 1)));
+    # 改变C的第一列的符号，和将其视为列矢量矩阵对应：
+    C:=C * reflection;
   fi;
 
   return C;
