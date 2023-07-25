@@ -1037,9 +1037,10 @@ ConjugatorMatrixGroups, function( G1, G2 )
     return fail;
   fi;
   
-  # Using the minimal generating set to improve algorithm efficiency.
-  gen1 := MinimalGeneratingSet(G1);
+  # Using the small generating set to improve algorithm efficiency.
+  gen1 := SmallGeneratingSet(G1);
   G1:= GroupWithGenerators(gen1);
+
   # hom1:=GroupHomomorphismByImagesNC(G1, G1);
   # or simply
   hom1:=IdentityMapping(G1);
@@ -1047,7 +1048,7 @@ ConjugatorMatrixGroups, function( G1, G2 )
   # Define polynomial variable
   x := Indeterminate(Rationals, "x");
 
-  # Calculate elementary divisors and conjugacy class sizes for each generator in G1's minimal generating set
+  # Calculate elementary divisors and conjugacy class sizes for each generator in G1's small generating set
   cc1 := ConjugacyClasses(G1);
   lst := List(gen1, g -> [
     ElementaryDivisorsMat(PolynomialRing(Rationals, 1), x * g^0 - g * One(x)),
@@ -1089,27 +1090,27 @@ end );
 # https://scripts.iucr.org/cgi-bin/paper?S0108767303004161
 InstallGlobalFunction( 
 EnantiomorphicPairOfSpaceGroup, function( S )
-  local d, trT, P, Pgen, N, norm, diag, C, res,
+  local d, P, Pgen, N, norm, diag, CR, C,
         A, B, z, Ugen, orbnpg, orbnpg_posi, i, x;
 
   if IsAffineCrystGroupOnRight( S ) then
     S := TransposedMatrixGroup( S );
-    res := EnantiomorphicPairOfSpaceGroup( S );
+    C := EnantiomorphicPairOfSpaceGroup( S );
 
-    if res <> fail then
-      res := TransposedMat( res );
+    if C <> fail then
+      C := TransposedMat( C );
     fi;
 
-    return res;
-  fi;
-
-  if not IsStandardAffineCrystGroup( S ) then
-    S := StandardAffineCrystGroup(S);
+    return C;
   fi;
 
   d:= DimensionOfMatrixGroup(S) - 1;
-  trT := TransposedMat(TranslationBasis( S ));
+
+  # 再调用 CARAT 的相关程序之前，首先用下面的方法来彻底简化已给空间群的表示：
+  CR:=ConjugatorReducedSpaceGroup(S);
+  S:=S^(CR^-1);
   P:=PointGroup(S);
+
   Pgen:=GeneratorsOfGroup(P);
   
   N:=Normalizer(GL(d,Integers), P);
@@ -1119,18 +1120,6 @@ EnantiomorphicPairOfSpaceGroup, function( S )
   # https://en.wikipedia.org/wiki/Schreier%27s_lemma
   # https://github.com/gap-packages/cryst/issues/23#issuecomment-844364463
   AddSet(norm, IdentityMat(d));
-
-  # ref AffineNormalizer
-  # For right action:
-  # we work in a standard representation
-  # if not IsStandardAffineCrystGroup( S ) then
-  #     invT := T^-1;
-  #     gens := List( GeneratorsOfGroup( N ), x -> T * x * invT );
-  #     Pgens := List( Pgens, x -> T * x * invT );
-  #     Sgens := List( Sgens, x -> S!.lconj * x * S!.rconj );
-  # else
-  #     gens := GeneratorsOfGroup( N );
-  # fi;
  
   diag:=List( [1..d+1], i -> 1 );
   diag[1]:=-1;
@@ -1182,11 +1171,11 @@ EnantiomorphicPairOfSpaceGroup, function( S )
     fi; 
   fi;
 
-  if C = fail then 
-    return C;
-  else
-    return C^(AugmentedMatrixOnLeft(trT, 0*[1..d])^-1);
+  if C <> fail then 
+    C:= C^(AugmentedMatrixOnLeft(CR, 0*[1..d])^-1);
   fi;
+  
+  return C;
 
 end );
 
