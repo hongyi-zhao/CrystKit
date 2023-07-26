@@ -1287,19 +1287,17 @@ end );
 InstallGlobalFunction( 
 ConjugatorReducedSpaceGroup, function( S )
   local d,  P, hom, trans, v, x,
-        F, llg, c, C, reflection,
-        # For debug
-        det;
+        F, llg, cllg, reflection, c, C;
   
   if IsAffineCrystGroupOnRight( S ) then
     C := ConjugatorReducedSpaceGroup( TransposedMatrixGroup( S ) );
     return TransposedMat(C);
   fi;
 
-  det:=[];
   d:=DimensionOfMatrixGroup(S) - 1;
+  # https://en.wikipedia.org/wiki/Hermite_normal_form#Row-style_Hermite_normal_form
+  # InternalBasis(S) is a row-style Hermite normal form, so whose demterminant is always positive.
   c:= TransposedMat(InternalBasis(S));
-  Add(det, DeterminantMat(c));
   F:=Sum(PointGroup( StandardAffineCrystGroup(S) ), g-> TransposedMat(g) * g );
 
   # relations  is  a  basis  of  the  space  of vectors (x_1, x_2, ..., x_n) such that ∑_{i = 1}^n x_i b_i is zero, and transformation gives the expression of the new
@@ -1315,9 +1313,25 @@ ConjugatorReducedSpaceGroup, function( S )
 
   llg:=LLLReducedGramMat(F);
   
+  # https://mail.google.com/mail/u/0/?ogbl#search/enantiomorphic+pair+conjugator/QgrcJHrtvXrNdzwRxSLnPpGBpgpLbrmxVnb
+  #   To have a standard orientation-reversing operation in arbitrary
+  # dimension, one would indeed take a transformation with an odd number of
+  # elements -1 and the rest 1, but the simplest odd number is 1, so one
+  # would take a matrix with just one -1 and the rest 1, this is simply a
+  # reflection.
+
   if not IsOne( llg.transformation ) then
-    c:=c * TransposedMat(llg.transformation);
-    Add(det, DeterminantMat(llg.transformation));
+
+    cllg:= TransposedMat(llg.transformation);
+
+    # 确保返回一个保手性的 conjugator，这样才不会改变晶体学意义上的空间群类型。
+    if DeterminantMat(cllg) < 0 then
+      reflection:=DiagonalMat(Concatenation([-1],List([1..d-1], x -> 1)));
+      # 将 cllg 其视为列矢量矩阵，右乘 reflection，和改变 cllg 的第一列的符号（即第一个基矢量）对应：
+      cllg := cllg * reflection;
+    fi;
+    c:=c * cllg;
+
   fi;
 
   C:=AugmentedMatrixOnLeft(c, 0*[1..d]);
@@ -1334,26 +1348,6 @@ ConjugatorReducedSpaceGroup, function( S )
     v:=Sum(trans)/Size(trans);
     C:=C * AugmentedMatrixOnLeft(IdentityMat(d), v);
 
-  fi;
-
-  # 保手性测试
-  # return [C, det];
-  
-  # https://mail.google.com/mail/u/0/?ogbl#search/enantiomorphic+pair+conjugator/QgrcJHrtvXrNdzwRxSLnPpGBpgpLbrmxVnb
-  #   To have a standard orientation-reversing operation in arbitrary
-  # dimension, one would indeed take a transformation with an odd number of
-  # elements -1 and the rest 1, but the simplest odd number is 1, so one
-  # would take a matrix with just one -1 and the rest 1, this is simply a
-  # reflection.
-
-  # 确保返回一个保手性的conjugator，这样才不会改变晶体学意义上的空间群类型。
-  # 实际上，似乎 InternalBasis / TranslationBasis 所使用的算法总是保手性的，因此，只需要在 llg.transformation 上做如下处理即可，
-  # 但是，为了保险起见，下面的方法也可以：
-
-  if DeterminantMat(C) < 0 then
-    reflection:=DiagonalMat(Concatenation([-1],List([1..d], x -> 1)));
-    # 将C其视为列矢量矩阵，右乘 reflection，和改变C的第一列的符号（即第一个基矢量）对应：
-    C:=C * reflection;
   fi;
 
   return C;
