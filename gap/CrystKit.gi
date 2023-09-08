@@ -114,7 +114,7 @@ InstallGlobalFunction( CaratName, function( S )
   fi;
 
   # 再调用 CARAT 的相关程序之前，首先用下面的方法来彻底简化已给空间群的表示：
-  C:=ConjugatorReducedSpaceGroup(S);
+  C:=ConjugatorSpaceGroupSimplification(S);
   S:=S^(C^-1);
 
   CaratWriteMatrixFile(Sgen, GeneratorsOfGroup( S ));
@@ -812,12 +812,12 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
     # S1^C1 = S1s
     # For matrices acting on the left, 对应于 cryst 的如下记号：
     # S1^(C1^-1) = S1s
-    C1    := ConjugatorReducedSpaceGroup( S1 );
+    C1    := ConjugatorSpaceGroupSimplification( S1 );
     S1s := S1^(C1^-1);
     P1s := PointGroup( S1s );
 
     # S2^C2 = S2s
-    C2  := ConjugatorReducedSpaceGroup( S2 );
+    C2  := ConjugatorSpaceGroupSimplification( S2 );
     S2s := S2^(C2^-1);
     P2s := PointGroup( S2s );
 
@@ -1089,13 +1089,13 @@ end );
 # Enantiomorphism of crystallographic groups in higher dimensions with results in dimensions up to 6
 # https://scripts.iucr.org/cgi-bin/paper?S0108767303004161
 InstallGlobalFunction( 
-EnantiomorphicPairOfSpaceGroup, function( S )
-  local d, P, Pgen, N, norm, reflection, CR, C,
+ConjugatorSpaceGroupEnantiomorphicPartner, function( S )
+  local d, P, Pgen, N, norm, reflection, CS, C,
         A, B, z, Ugen, orbnpg, orbnpg_posi, i, x;
 
   if IsAffineCrystGroupOnRight( S ) then
     S := TransposedMatrixGroup( S );
-    C := EnantiomorphicPairOfSpaceGroup( S );
+    C := ConjugatorSpaceGroupEnantiomorphicPartner( S );
 
     if C <> fail then
       C := TransposedMat( C );
@@ -1107,8 +1107,8 @@ EnantiomorphicPairOfSpaceGroup, function( S )
   d:= DimensionOfMatrixGroup(S) - 1;
 
   # 再调用 CARAT 的相关程序之前，首先用下面的方法来彻底简化已给空间群的表示：
-  CR:=ConjugatorReducedSpaceGroup(S);
-  S:=S^(CR^-1);
+  CS:=ConjugatorSpaceGroupSimplification(S);
+  S:=S^(CS^-1);
   P:=PointGroup(S);
 
   Pgen:=GeneratorsOfGroup(P);
@@ -1171,7 +1171,7 @@ EnantiomorphicPairOfSpaceGroup, function( S )
   fi;
 
   if C <> fail then 
-    C:= CR * C;
+    C:= CS * C;
   fi;
   
   return C;
@@ -1283,14 +1283,18 @@ end );
 # many properties. One addresses this phenomenon by the concept of enantiomorphism.
 
 
+# 算法的进一步优化的可能性：
+# 1. 基于 GroupSumBSGS 思想高效计算 Sum(trans)
+# 2. InternalBasis 高效实现。
+
 # 用下面的解决方法来首先彻底简化已给空间群的表示：
 InstallGlobalFunction( 
-ConjugatorReducedSpaceGroup, function( S )
+ConjugatorSpaceGroupSimplification, function( S )
   local d,  P, hom, trans, v, x,
         F, llg, cllg, reflection, c, C;
   
   if IsAffineCrystGroupOnRight( S ) then
-    C := ConjugatorReducedSpaceGroup( TransposedMatrixGroup( S ) );
+    C := ConjugatorSpaceGroupSimplification( TransposedMatrixGroup( S ) );
     return TransposedMat(C);
   fi;
 

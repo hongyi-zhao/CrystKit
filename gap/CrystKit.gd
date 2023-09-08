@@ -25,11 +25,11 @@ DeclareGlobalFunction( "CaratQ_catalog" );
 DeclareGlobalFunction( "PhipnInverse" );
 DeclareGlobalFunction( "NewFiniteOrdersOfGLNZ" );
 
-DeclareGlobalFunction( "ConjugatorReducedSpaceGroup" );
+DeclareGlobalFunction( "ConjugatorSpaceGroupSimplification" );
 DeclareGlobalFunction( "OrbitSpaceGroupStdByNormalizerPointGroup" );
 DeclareGlobalFunction( "OrbitSpaceGroupStdByCollectEquivExtensions" );
 DeclareGlobalFunction( "AffineIsomorphismSpaceGroups" );
-DeclareGlobalFunction( "EnantiomorphicPairOfSpaceGroup" );
+DeclareGlobalFunction( "ConjugatorSpaceGroupEnantiomorphicPartner" );
 DeclareGlobalFunction( "IdentifySpaceGroup" );
 
 DeclareGlobalFunction( "MinimalGeneratingSetAffineCrystGroup" );
