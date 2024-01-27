@@ -2,13 +2,11 @@
 # https://iso.byu.edu/iso/findssghelp.php
 # The output notation for superspace-group operators will match that of the input: There are three choices: (x,y,z,t,u,v), (x1,x2,x3,x4,x5,x6), and (xs1,xs2,xs3,xs4,xs5,xs6). See the ISO(3+d)D help page for more information about these notations. 
 
-# Define variable-length `Indeterminate's in function.
-# https://mail.google.com/mail/u/0/?ogbl#search/in%3Asent+gap/QgrcJHsBqxpXbHCSnPqBGGBZRDqphmxvpZb
 InstallGlobalFunction( IdentifyGroupGenerators, function( S )
   
   local gens, vecname, d, vec, g, i;
   
-  # BCS IDENTIFY GROUP 和 findssg 都是工作于左作用下面的标准表示的。
+  # BCS IDENTIFY GROUP 和 findssg 都是工作于左作用下的标准表示的。
   if IsAffineCrystGroupOnRight(S) then
     S:=TransposedMatrixGroup(S);
   fi;
@@ -374,10 +372,11 @@ end );
 #   return apar;
 # end );
 
-# Find the highest finite order group element of an infinite group.
-# https://mail.google.com/mail/u/0/?ogbl#sent/KtbxLwHLtgJlPSGRwNfgCnBVmRxJDfvqdV
-#  The highest finite order of an element of your group is 6, cf. https://en.wikipedia.org/wiki/Crystallographic_restriction_theorem .
 
+
+#  The highest finite order of an element of your group is 6, cf. https://en.wikipedia.org/wiki/Crystallographic_restriction_theorem.
+
+# Find the highest finite order group element of an infinite group.
 # Hope this helps,
 
 #     Stefan
@@ -892,11 +891,7 @@ InstallGlobalFunction( AffineIsomorphismSpaceGroups, function( S1, S2 )
 end );
 
 
-# About my research results on the minimal generating set of space groups and my thanks to you.
-# https://mail.google.com/mail/u/0/?ogbl#drafts/KtbxLwHDlCCBldrFJCXLMDsMVGZBLcklzL
-
 # Ask for your comments and suggestions about my implementation of the MinimalGeneratingSetAffineCrystGroup.
-# https://mail.google.com/mail/u/0/?ogbl#inbox/QgrcJHsHqgRmwLtpXtLbsrWKXXWRXfgncNL
 #  Dear Zhao,
 
 # well -- the minimal generating set problem for infinite non-nilpotent groups
@@ -1106,7 +1101,7 @@ ConjugatorSpaceGroupEnantiomorphicPartner, function( S )
 
   d:= DimensionOfMatrixGroup(S) - 1;
 
-  # 再调用 CARAT 的相关程序之前，首先用下面的方法来彻底简化已给空间群的表示：
+  # 在调用 CARAT 的相关程序之前，首先用下面的方法来彻底简化已给空间群的表示：
   CS:=ConjugatorSpaceGroupSimplification(S);
   S:=S^(CS^-1);
   P:=PointGroup(S);
@@ -1181,9 +1176,6 @@ end );
 
 # Add the function DirectSumDecompositionMatrix.
 # https://github.com/gap-packages/utils/issues/64#issuecomment-1591422710
-# Direct sum decomposition of a matrix.
-# https://mail.google.com/mail/u/0/?ogbl#sent/KtbxLwHHpRfqHzrslftpfCbXhvQJngJvxV
-# Dear forum,
 
 # This is a possible approach, inspired in
 # https://github.com/gap-packages/numericalsgps/blob/fcde379b01bd44b1fa80cd69d7ddd6a8acdcfe2f/gap/catenary-tame.gi#LL803C1-L831C4
@@ -1239,12 +1231,6 @@ DirectSumDecompositionMatrix, function(l)
 end );
 
 
-# About the three classes translations related to a specific space group.
-# https://mail.google.com/mail/u/0/?ogbl#search/branton%40byu.edu+origin+shift+/QgrcJHsbjCgGxkTcpwdpcRTMdWjmWTPHncg
-
-# Some further discussions based on your lecture note "Group theory applied to crystallography" and some of your papers.
-# https://mail.google.com/mail/u/0/?ogbl#sent/KtbxLvHgMkZlGBgrVFcHgjClrgRRwWDdtg
-
 # Bernd Souvignier的 lecture note，page 27， Theorem 43:
 # https://www.math.ru.nl/~souvi/krist_09/cryst.pdf
 # The following theorem (which is not hard to prove) states that by an appropriate shift of the
@@ -1256,7 +1242,7 @@ end );
 # 2. 若首先转到标准表示，再进行基于LLLReducedGramMat的简化方法,则可以保证结果仍是标准表示，便于后续进一步简化矢量系统。
 # 故改为基于LLReducedGramMat的方法
 
-# 3. 基于 Theorem 43，有理化矢量系统。
+# 3. 基于Bernd Souvignier的 lecture note 中的 Theorem 43，有理化矢量系统。
 
 
 # 确保返回一个保手性的conjugator，这样才不会改变晶体学意义上的空间群类型。
@@ -1281,11 +1267,6 @@ end );
 # left-handed screw are clearly isomorphic, they do not belong to the same space group type.
 # However, groups that differ only by their orientation are closely related to each other and share
 # many properties. One addresses this phenomenon by the concept of enantiomorphism.
-
-
-# 算法的进一步优化的可能性：
-# 1. 基于 GroupSumBSGS 思想高效计算 Sum(trans)
-# 2. InternalBasis 高效实现。
 
 # 用下面的解决方法来首先彻底简化已给空间群的表示：
 InstallGlobalFunction( 
@@ -1317,8 +1298,7 @@ ConjugatorSpaceGroupSimplification, function( S )
 
   llg:=LLLReducedGramMat(F);
   
-  # https://mail.google.com/mail/u/0/?ogbl#search/enantiomorphic+pair+conjugator/QgrcJHrtvXrNdzwRxSLnPpGBpgpLbrmxVnb
-  #   To have a standard orientation-reversing operation in arbitrary
+  # To have a standard orientation-reversing operation in arbitrary
   # dimension, one would indeed take a transformation with an odd number of
   # elements -1 and the rest 1, but the simplest odd number is 1, so one
   # would take a matrix with just one -1 and the rest 1, this is simply a
