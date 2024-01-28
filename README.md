@@ -1,10 +1,10 @@
 ## The GAP package CrystKit
 
-#Description
+# Description
 
 CrystKit is a GAP package designed for the manipulation and analysis of crystallographic groups. It offers a variety of functionalities, including space group simplification on any basis, minimal generating set computation for solvable space groups, isomorphism detection between space groups, enantiomorphic pair existence checking, efficient orbit computation for the space group vector system (SNoT), and rapid identification of space groups (up to six-dimension) based on CARAT. It also encompasses the calculation of allowed orders of point groups in any dimensional space groups (an extension of the crystallographic restriction theorem) and conjugacy determination between two finite matrix groups.
 
-#Main Features
+# Main Features
 
 Simplification of Space Groups Represented on Any Basis: Transparent simplification to more manageable generator forms.
 
@@ -74,7 +74,7 @@ P6:=PointGroup(S6);;
 ConjugatorMatrixGroups(P, P6); 
 ```
 
-#Install
+# Install
 
 CrystKit is distributed with GAP, and does not require any installation. It is loaded with the GAP command
 
@@ -82,7 +82,7 @@ CrystKit is distributed with GAP, and does not require any installation. It is l
 gap> LoadPackage( "CrystKit" ); 
 ```
 
-#Contact
+# Contact
 
 For bug reports, suggestions and other comments please use the issue tracker on the GitHub page of the package:
 
