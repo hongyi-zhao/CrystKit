@@ -1,4 +1,4 @@
-##The GAP package CrystKit
+## The GAP package CrystKit
 
 #Description
 
