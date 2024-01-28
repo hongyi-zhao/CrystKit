@@ -342,38 +342,6 @@ IdentifySpaceGroup, function( S )
 end );
 
 
-# Create the parity transformation matrices. 
-# https://community.wolfram.com/groups/-/m/t/2829458?p_p_auth=mg22BhW6
-# Create the odd parity transformation matrices.
-# https://mail.google.com/mail/u/0/?ogbl#sent/QgrcJHsbjCZSdRXDtbTvBvxRmDjWSjVzqXL
-
-
-# https://www.britannica.com/science/parity-particle-physics
-# parity, in physics, property important in the quantum-mechanical description of a physical system. In most cases it relates to the symmetry of the wave function representing a system of fundamental particles. A parity transformation replaces such a system with a type of mirror image. Stated mathematically, the spatial coordinates describing the system are inverted through the point at the origin; that is, the coordinates x, y, and z are replaced with −x, −y, and −z. In general, if a system is identical to the original system after a parity transformation, the system is said to have even parity. If the final formulation is the negative of the original, its parity is odd. For either parity the physical observables, which depend on the square of the wave function, are unchanged. A complex system has an overall parity that is the product of the parities of its components.
-
-
-# https://en.wikipedia.org/wiki/Parity_(physics)
-# In physics, a parity transformation (also called parity inversion) is the flip in the sign of one spatial coordinate. In three dimensions, it can also refer to the simultaneous flip in the sign of all three spatial coordinates (a point reflection)
-# It can also be thought of as a test for chirality of a physical phenomenon, in that a parity inversion transforms a phenomenon into its mirror image.
-
-# Construct all the possiable parity transformation corresponding to the space group dimension under consideration:
-# InstallGlobalFunction( AffineTransformationListOfParityOperator, function( d ) 
-  
-#   local par, ppar, apar, i, x;
-#   # d:=3;
-#   # parity transformation (also called parity inversion)
-#   # par:=List(Filtered([1..d], IsOddInt), x -> Concatenation(-List([1..x], i -> i^0), List([1..d-x], i -> i^0)));
-#   # or
-#   par:=List(Filtered([1..d], IsOddInt), x -> Concatenation(-List([1..x], i -> 1), List([1..d-x], i -> 1)));
-#   ppar:=Union(List(par, x -> PermutationsList(x)));
-#   # conjugator of parity 
-#   apar:=List(ppar, x -> DiagonalMat(Concatenation(x,[1])));
-
-#   return apar;
-# end );
-
-
-
 #  The highest finite order of an element of your group is 6, cf. https://en.wikipedia.org/wiki/Crystallographic_restriction_theorem.
 
 # Find the highest finite order group element of an infinite group.
