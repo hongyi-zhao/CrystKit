@@ -75,7 +75,7 @@ ConjugatorMatrixGroups(P, P6);
 
 # Install
 
-CrystKit is distributed with GAP, and does not require any installation. It is loaded with the GAP command
+Clone this repository and load with the GAP command:
 
 ```
 gap> LoadPackage( "CrystKit" ); 
