@@ -33,7 +33,7 @@ AffineIsomorphismSpaceGroups(S,S2);
 S^(last^-1)=S2;
 ```
 
-Existence check for enantiomorphic pairs in any basis represented space groups: finding the conjugator connecting its enantiomorphic partners for a given space group.
+Existence check for enantiomorphic pairs in any basis represented space groups: finding the conjugator connecting its enantiomorphic partner for a given space group.
 
 ```gap
 S4:=SpaceGroupOnLeftIT(3,212);
