@@ -6,7 +6,7 @@ CrystKit is a GAP package designed for the manipulation and analysis of crystall
 
 # Main Features
 
-Simplification of Space Groups Represented on Any Basis: Transparent simplification to more manageable generator forms.
+Simplification of space groups represented on any basis: simplification to more simple generator forms.
 
 ```gap
 SGGenSet227me:=[ [ [ 0, -1, 0, 1/2 ], [ 0, 0, -1, 1/2 ], [ -1, 0, 0, 1/2 ], [ 0, 0, 0, 1 ] ], [ [ -15/4, 29/4, -15/4, -15/16 ], [ -33/8, 55/8, -25/8, -25/32 ], 
@@ -17,7 +17,7 @@ S1:=S^(conj1^-1);
 GeneratorsOfGroup(S1);
 ```
 
-Minimal Generating Set Calculation for Solvable Space Groups: Identifying the minimal number of generators for 3D space group 227.
+Minimal generating set calculation for solvable space groups: e.g., identifying the minimal number of generators for 3D space group 227 as follows.
 
 ```gap
 S2:=SpaceGroupOnLeftIT(3,227);
@@ -26,23 +26,22 @@ minSgen:=MinimalGeneratingSetAffineCrystGroup(S2);
 Length(minSgen.mgs);
 ```
 
-Isomorphism Determination Between Space Groups Represented on Any Basis: Checking isomorphism and directly comparing two space groups.
+Isomorphism determination between space groups represented on any basis: checking isomorphism between two space groups.
 
 ```gap
 AffineIsomorphismSpaceGroups(S,S2);
 S^(last^-1)=S2;
 ```
 
-Existence Check for Enantiomorphic Pairs in Any Basis Represented Space Groups: Finding enantiomorphic partners for given space groups.
+Existence check for enantiomorphic pairs in any basis represented space groups: finding the conjugator connecting its enantiomorphic partners for a given space group.
 
 ```gap
 S4:=SpaceGroupOnLeftIT(3,212);
 conj2:=ConjugatorSpaceGroupEnantiomorphicPartner(S4);
 S5:=S4^(conj2^-1);
-
 ```
 
-Efficient Calculation of Orbits of the Space Group Vector System (SNoT): Orbit calculation using the normalizer of the point group.
+Efficient calculation of orbits of the space group vector system (SNoT): orbit calculation using the normalizer of the point group.
 
 ```gap
 P4:=PointGroup(S4);
@@ -51,21 +50,21 @@ norm := GeneratorsOfGroup(Normalizer(GL(d,Integers), P4));
 orbnpg := OrbitSpaceGroupStdByNormalizerPointGroup(S4, GeneratorsOfGroup(P4), norm);
 ```
 
-Rapid Identification of Space Groups (Up to Six Dimensions) Based on Any Basis (using CARAT): Quick identification methods for space groups.
+Rapid identification of space groups (up to six dimensions) based on any basis (using CARAT): quick identification method for space groups.
 
 ```gap
 IdentifySpaceGroup(S4);
 IdentifySpaceGroup(S5);
 ```
 
-Allowed Orders Calculation for Point Groups in Any Dimensional Space Groups: Extends the crystallographic restriction theorem by calculating new finite orders of GLNZ.
+Allowed orders calculation for point groups in any dimensional space groups: the crystallographic restriction theorem in higher dimensions by calculating new finite orders of GLNZ.
 
 ```gap
 NewFiniteOrdersOfGLNZ(2);
 NewFiniteOrdersOfGLNZ(4);
 ```
 
-Conjugacy Determination Between Two Finite Matrix Groups (using RepnDecomp): Determines if two point groups are conjugate.
+Conjugacy determination between two finite matrix Groups (using RepnDecomp): e.g., determines if two point groups are conjugate.
 
 ```gap
 P:=PointGroup(S);;
