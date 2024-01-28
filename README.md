@@ -2,7 +2,7 @@
 
 # Description
 
-CrystKit is a GAP package designed for the manipulation and analysis of crystallographic groups. It offers a variety of functionalities, including space group simplification on any basis, minimal generating set computation for solvable space groups, isomorphism detection between space groups, enantiomorphic pair existence checking, efficient orbit computation for the space group vector system (SNoT), and rapid identification of space groups (up to six-dimension) based on CARAT. It also encompasses the calculation of allowed orders of point groups in any dimensional space groups (an extension of the crystallographic restriction theorem) and conjugacy determination between two finite matrix groups.
+CrystKit is a GAP package designed for the manipulation and analysis of crystallographic groups. It offers a variety of functionalities, including space group simplification on any basis, minimal generating set computation for solvable space groups, isomorphism detection between space groups, enantiomorphic pair existence checking, efficient orbit computation for the space group vector system (SNoT), and rapid identification of space groups (up to six-dimension) based on CARAT. It also encompasses the calculation of allowed orders of point groups in any dimensional space groups, aka, the crystallographic restriction theorem in a given dimension, and conjugacy determination between two finite matrix groups.
 
 # Main Features
 
