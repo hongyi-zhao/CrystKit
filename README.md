@@ -2,7 +2,7 @@
 
 # Description
 
-CrystKit is a GAP package designed for the manipulation and analysis of crystallographic groups. It offers a variety of functionalities, including space group simplification on any basis, minimal generating set computation for solvable space groups, isomorphism detection between space groups, enantiomorphic pair existence checking, efficient orbit computation for the space group vector system (SNoT), and rapid identification of space groups (up to six-dimension) based on CARAT. It also encompasses the calculation of allowed orders of point groups in any dimensional space groups, aka, the crystallographic restriction theorem in a given dimension, and conjugacy determination between two finite matrix groups.
+CrystKit is a GAP package designed to manipulate and analyze crystallographic groups. It offers a variety of functionalities, including space group simplification on any basis, minimal generating set computation for solvable space groups, isomorphism detection between space groups, enantiomorphic pair existence checking, efficient orbit computation of the system of the space group's nonprimitive translation vector (SNoT), see the definition 37 on page 23 [here](https://www.math.ru.nl/~souvi/krist_09/cryst.pdf) for more tails and rapid identification of space groups (up to six-dimension) based on [CARAT](https://github.com/lbfm-rwth/carat). It also encompasses the calculation of allowed orders of point groups in any dimensional space groups, aka, the crystallographic restriction theorem in a given dimension, and conjugacy determination between two finite matrix groups based on [RepnDecomp](https://github.com/gap-packages/RepnDecomp).
 
 # Main Features
 
@@ -50,7 +50,7 @@ norm := GeneratorsOfGroup(Normalizer(GL(d,Integers), P4));
 orbnpg := OrbitSpaceGroupStdByNormalizerPointGroup(S4, GeneratorsOfGroup(P4), norm);
 ```
 
-Rapid identification of space groups (up to six dimensions) based on any basis (using CARAT): quick identification method for space groups.
+Rapid identification of space groups (up to six dimensions) based on any basis (using [CARAT](https://github.com/lbfm-rwth/carat)): quick identification method for space groups.
 
 ```gap
 IdentifySpaceGroup(S4);
@@ -64,7 +64,7 @@ NewFiniteOrdersOfGLNZ(2);
 NewFiniteOrdersOfGLNZ(4);
 ```
 
-Conjugacy determination between two finite matrix Groups (using RepnDecomp): e.g., determines if two point groups are conjugate.
+Conjugacy determination between two finite matrix Groups (using [RepnDecomp](https://github.com/gap-packages/RepnDecomp)): e.g., determines if two point groups are conjugate.
 
 ```gap
 P:=PointGroup(S);;
