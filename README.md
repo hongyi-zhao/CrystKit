@@ -81,6 +81,11 @@ Clone this repository and load with the GAP command:
 gap> LoadPackage( "CrystKit" ); 
 ```
 
+# Citing
+
+If you use this tool, please cite: 
+Zhao, H. (2024). Crystkit. Zenodo. https://doi.org/10.5281/zenodo.10584582
+
 # Contact
 
 For bug reports, suggestions and other comments please use the issue tracker on the GitHub page of the package:
