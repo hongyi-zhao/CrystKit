@@ -83,8 +83,7 @@ gap> LoadPackage( "CrystKit" );
 
 # Citing
 
-If you use this tool, please cite: 
-Zhao, H. (2024). Crystkit. Zenodo. https://doi.org/10.5281/zenodo.10584582
+If you use this tool, I kindly ask citing as follows to properly acknowledge the developer's contribution: Zhao, H. (2024). Crystkit. Zenodo. https://doi.org/10.5281/zenodo.10584582.
 
 # Contact
 
