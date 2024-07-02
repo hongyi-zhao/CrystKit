@@ -4,28 +4,37 @@
 
 InstallGlobalFunction( IdentifyGroupGenerators, function( S )
   
-  local gens, vecname, d, vec, g, i;
+  local gens, vecname, d, vec, g, i, tgen;
   
-  # BCS IDENTIFY GROUP 和 findssg 都是工作于左作用下的标准表示的。
   if IsAffineCrystGroupOnRight(S) then
     S:=TransposedMatrixGroup(S);
   fi;
 
-  if not IsStandardSpaceGroup(S) then
-    S:=StandardAffineCrystGroup(S);
-  fi;
-
+  # https://www.cryst.ehu.es/cgi-bin/cryst/programs/checkgr.pl?tipog=gesp
+  # BCS的算法已经隐含它在处理的时候额外加上了三个单位平移生成元。
+  # 因为BCS默认已经加上了，用户无需添加。
+  # Assumed lattice translations:
+  # x + 1 , y , z
+  # x , y + 1 , z
+  # x , y , z + 1
   gens:= GeneratorsOfGroup(S);
   vecname:=["x","y","z","t","u","v"];
   d := First(Set(DimensionsMat(gens[1]))) - 1;
   
+  tgen:=List(IdentityMat(d), x -> AugmentedMatrixOnLeft(IdentityMat(d),x));
+  if not ForAll(tgen, x -> x in S) then
+    Error("This space group can be identified by this tool.");
+  fi;
+
   if d > Size(vecname) then
     Error("Not yet supported");
   fi;
 
   vec := List([1..d],x -> X(Rationals,x)); 
-  gens:=List( gens , g -> g{[1..d]}{[1..d]} * vec +g{[1..d]}[d+1] );
- 
+  # BCS IDENTIFY GROUP 和 findssg 都是假定了具有d个单位平移生成元，
+  # 所以，必然满足下面的 FractionModOne 相关的处理逻辑：
+  gens:=List( gens , g -> g{[1..d]}{[1..d]} * vec + List(g{[1..d]}[d+1], FractionModOne) );
+
   for i in [1..d] do
     SetName(vec[i],vecname[i]);
   od;
