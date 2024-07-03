@@ -1,3 +1,8 @@
+# TODO:
+# 对应所有调用了 ConjugatorSpaceGroupSimplification 的相关函数，实现如下的逻辑以提升效率：
+# 1. 首先尝试不调用 ConjugatorSpaceGroupSimplification。
+# 2. 如果不能解决问题，再尝试调用 ConjugatorSpaceGroupSimplification。
+
 # https://www.cryst.ehu.es/cgi-bin/cryst/programs/checkgr.pl?tipog=gesp
 # https://iso.byu.edu/iso/findssghelp.php
 # The output notation for superspace-group operators will match that of the input: There are three choices: (x,y,z,t,u,v), (x1,x2,x3,x4,x5,x6), and (xs1,xs2,xs3,xs4,xs5,xs6). See the ISO(3+d)D help page for more information about these notations. 
