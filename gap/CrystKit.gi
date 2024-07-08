@@ -9,7 +9,7 @@
 
 InstallGlobalFunction( IdentifyGroupGenerators, function( S )
   
-  local gens, vecname, d, vec, g, i, tgen, T;
+  local gens, vecname, d, vec, g, i, tgen;
   
   if IsAffineCrystGroupOnRight(S) then
     S:=TransposedMatrixGroup(S);
@@ -37,15 +37,7 @@ InstallGlobalFunction( IdentifyGroupGenerators, function( S )
 
   vec := List([1..d],x -> X(Rationals,x)); 
 
-  # BCS IDENTIFY GROUP 和 findssg 都是假定了具有d个单位平移生成元，
-  # 所以，必然满足下面的 FractionModOne 相关的处理逻辑：
-  
-  gens:=List( gens , g -> g{[1..d]}{[1..d]} * vec + List(g{[1..d]}[d+1], FractionModOne) );
-
-  # 注意，不能使用下面的方法简化平移部分，因为结果可能已经不再是生成集。
-  # 比如，SGMinGenSetITA[229,2] 就属于此类情况。
-  # T:=TranslationBasis(S);
-  # gens:=List( gens , g -> g{[1..d]}{[1..d]} * vec + VectorModL(g{[1..d]}[d+1], T) );
+  gens:=List( gens , g -> g{[1..d]}{[1..d]} * vec + g{[1..d]}[d+1]);
 
   for i in [1..d] do
     SetName(vec[i],vecname[i]);
