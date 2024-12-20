@@ -87,5 +87,5 @@ For bug reports, suggestions and other comments please use the issue tracker on 
 
 https://github.com/hongyi-zhao/CrystKit/issues
 
-For further information, contact us at: <hongshengzhao@xpc.edu.cn> or <hongyi.zhao@gmail.com>.
+For further information, contact us at: <hongshengzhao@hevute.edu.cn> or <hongyi.zhao@gmail.com>.
 
